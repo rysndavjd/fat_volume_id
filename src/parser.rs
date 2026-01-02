@@ -12,7 +12,7 @@
 
 use crate::{
     Error, VolumeId32,
-    error::{ErrorKind, InvalidVolumeId},
+    error::InvalidVolumeId,
     fmt::{HyphenatedId32, SimpleId32},
     std::str::FromStr,
 };
@@ -24,7 +24,7 @@ impl FromStr for VolumeId32 {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::try_parse(s)
+        Self::parse(s)
     }
 }
 
@@ -32,7 +32,7 @@ impl TryFrom<&'_ str> for VolumeId32 {
     type Error = Error;
 
     fn try_from(s: &'_ str) -> Result<Self, Self::Error> {
-        Self::try_parse(s)
+        Self::parse(s)
     }
 }
 
@@ -41,7 +41,7 @@ impl TryFrom<String> for VolumeId32 {
     type Error = Error;
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
-        Self::try_parse(s.as_ref())
+        Self::parse(s.as_ref())
     }
 }
 
@@ -49,7 +49,25 @@ impl VolumeId32 {
     /// Parses a [`VolumeId32`] from a string slice of hexadecimal digits.
     ///
     /// To parse a [`VolumeId32`] from a byte stream instead of a UTF8 string, see
-    /// [`VolumeId32::try_parse_ascii`].
+    /// [`try_parse_ascii`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use fat_volume_id::VolumeId32;
+    /// let volumeid32 = VolumeId32::parse("49aa648a")
+    ///     .expect("Failed Parsing String");
+    ///
+    /// assert_eq!(volumeid32.to_string(), "49aa648a");
+    /// ```
+    /// [`try_parse_ascii`]: #method.try_parse_ascii
+    pub fn parse(input: &str) -> Result<Self, Error> {
+        Self::try_parse_ascii(input.as_bytes()).map_err(InvalidVolumeId::into_err)
+    }
+
+    /// Parses a [`VolumeId32`] from a string slice of hexadecimal digits.
+    ///
+    /// To parse a [`VolumeId32`] from a byte stream instead of a UTF8 string, see
+    /// [`try_parse_ascii`].
     ///
     /// # Examples
     /// ```
@@ -59,14 +77,15 @@ impl VolumeId32 {
     ///
     /// assert_eq!(volumeid32.to_string(), "49aa648a");
     /// ```
-    pub const fn try_parse(input: &str) -> Result<Self, Error> {
-        return Self::try_parse_ascii(input.as_bytes());
+    /// [`try_parse_ascii`]: #method.try_parse_ascii
+    pub const fn try_parse<'a>(input: &'a str) -> Result<Self, InvalidVolumeId<'a>> {
+        Self::try_parse_ascii(input.as_bytes())
     }
 
     /// Parses a [`VolumeId32`] from a string of hexadecimal digits.
     ///
     /// The input is expected to be a string of ASCII characters. This method
-    /// can be more convenient than [`VolumeId32::try_parse`] if the [`VolumeId32`] is being
+    /// can be more convenient than [`try_parse`] if the [`VolumeId32`] is being
     /// parsed from a byte stream instead of from a UTF8 string.
     ///
     /// # Examples
@@ -77,17 +96,18 @@ impl VolumeId32 {
     ///
     /// assert_eq!(volumeid32.to_string(), "49aa648a");
     /// ```
-    pub const fn try_parse_ascii(s: &[u8]) -> Result<Self, Error> {
+    /// [`try_parse`]: #method.try_parse
+    pub const fn try_parse_ascii<'a>(s: &'a [u8]) -> Result<Self, InvalidVolumeId<'a>> {
         match (s.len(), s) {
             (8, s) => match parse_simpleid32(s) {
                 Ok(bytes) => Ok(VolumeId32::from_bytes(bytes)),
-                Err(_) => Err(Error(ErrorKind::ParseOther)),
+                Err(e) => Err(e),
             },
             (9, s) => match parse_hyphenated(s) {
                 Ok(bytes) => Ok(VolumeId32::from_bytes(bytes)),
-                Err(_) => Err(Error(ErrorKind::ParseOther)),
+                Err(e) => Err(e),
             },
-            _ => Err(Error(ErrorKind::ParseOther)),
+            _ => Err(InvalidVolumeId(s)),
         }
     }
 }
@@ -159,6 +179,10 @@ pub(crate) const fn parse_hyphenated(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolu
         let h3 = HEX_TABLE[s[(i + 2) as usize] as usize];
         let h4 = HEX_TABLE[s[(i + 3) as usize] as usize];
 
+        if h1 | h2 | h3 | h4 == 0xff {
+            return Err(InvalidVolumeId(s));
+        }
+
         buf[j * 2] = SHL4_TABLE[h1 as usize] | h2;
         buf[j * 2 + 1] = SHL4_TABLE[h3 as usize] | h4;
         j += 1;
@@ -205,6 +229,7 @@ const SHL4_TABLE: &[u8; 256] = &{
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::error::ErrorKind;
 
     #[test]
     fn test_parse_volumeid32_valid() {
@@ -226,12 +251,12 @@ mod tests {
     #[test]
     fn test_parse_volumeid32_invalid() {
         assert_eq!(
-            VolumeId32::try_parse(""),
+            VolumeId32::parse(""),
             Err(Error(ErrorKind::ParseSimpleLength { len: 0 }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("!"),
+            VolumeId32::parse("!"),
             Err(Error(ErrorKind::ParseChar {
                 character: '!',
                 index: 1,
@@ -239,61 +264,46 @@ mod tests {
         );
 
         assert_eq!(
-            VolumeId32::try_parse("F9168C5E-CEB2-4faa-B6BF-329BF39FA1E45"),
+            VolumeId32::parse("F91-CEB24"),
             Err(Error(ErrorKind::ParseGroupLength {
-                group: 4,
-                len: 13,
-                index: 25,
-            }))
-        );
-
-        assert_eq!(
-            VolumeId32::try_parse("F9168C5E-CEB2-4faa-BBF-329BF39FA1E4"),
-            Err(Error(ErrorKind::ParseGroupLength {
-                group: 3,
+                group: 0,
                 len: 3,
-                index: 20,
+                index: 1,
             }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("F9168C5E-CEB2-4faa-BGBF-329BF39FA1E4"),
+            VolumeId32::parse("F916-4fa"),
+            Err(Error(ErrorKind::ParseGroupLength {
+                group: 1,
+                len: 3,
+                index: 6,
+            }))
+        );
+
+        assert_eq!(
+            VolumeId32::parse("QABC-1234"),
             Err(Error(ErrorKind::ParseChar {
-                character: 'G',
-                index: 21,
+                character: 'Q',
+                index: 1,
             }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("F9168C5E-CEB2F4faaFB6BFF329BF39FA1E4"),
-            Err(Error(ErrorKind::ParseGroupCount { count: 2 }))
-        );
-
-        assert_eq!(
-            VolumeId32::try_parse("F9168C5E-CEB2-4faaFB6BFF329BF39FA1E4"),
+            VolumeId32::parse("F9-16-8C5E"),
             Err(Error(ErrorKind::ParseGroupCount { count: 3 }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("F9168C5E-CEB2-4faa-B6BFF329BF39FA1E4"),
-            Err(Error(ErrorKind::ParseGroupCount { count: 4 }))
-        );
-
-        assert_eq!(
-            VolumeId32::try_parse("F9168C5E-CEB2-4faa"),
-            Err(Error(ErrorKind::ParseGroupCount { count: 3 }))
-        );
-
-        assert_eq!(
-            VolumeId32::try_parse("F9168C5E-CEB2-4faaXB6BFF329BF39FA1E4"),
+            VolumeId32::parse("F9168C5X"),
             Err(Error(ErrorKind::ParseChar {
                 character: 'X',
-                index: 19,
+                index: 8,
             }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("{F9168C5E-CEB2-4faa9B6BFF329BF39FA1E41"),
+            VolumeId32::parse("{F9168C5"),
             Err(Error(ErrorKind::ParseChar {
                 character: '{',
                 index: 1,
@@ -301,73 +311,43 @@ mod tests {
         );
 
         assert_eq!(
-            VolumeId32::try_parse("{F9168C5E-CEB2-4faa9B6BFF329BF39FA1E41}"),
-            Err(Error(ErrorKind::ParseGroupCount { count: 3 }))
+            VolumeId32::parse("67e5"),
+            Err(Error(ErrorKind::ParseSimpleLength { len: 4 }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("F9168C5E-CEB-24fa-eB6BFF32-BF39FA1E4"),
-            Err(Error(ErrorKind::ParseGroupLength {
-                group: 1,
-                len: 3,
-                index: 10,
-            }))
-        );
-
-        // // (group, found, expecting)
-        // //
-        assert_eq!(
-            VolumeId32::try_parse("01020304-1112-2122-3132-41424344"),
-            Err(Error(ErrorKind::ParseGroupLength {
-                group: 4,
-                len: 8,
-                index: 25,
-            }))
+            VolumeId32::parse("123456ABC"),
+            Err(Error(ErrorKind::ParseSimpleLength { len: 9 }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("67e5504410b1426f9247bb680e5fe0c"),
-            Err(Error(ErrorKind::ParseSimpleLength { len: 31 }))
-        );
-
-        assert_eq!(
-            VolumeId32::try_parse("67e5504410b1426f9247bb680e5fe0c88"),
-            Err(Error(ErrorKind::ParseSimpleLength { len: 33 }))
-        );
-
-        assert_eq!(
-            VolumeId32::try_parse("67e5504410b1426f9247bb680e5fe0cg8"),
+            VolumeId32::parse("67e55abg"),
             Err(Error(ErrorKind::ParseChar {
                 character: 'g',
-                index: 32,
+                index: 8,
             }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("67e5504410b1426%9247bb680e5fe0c8"),
+            VolumeId32::parse("67e5%2fb"),
             Err(Error(ErrorKind::ParseChar {
                 character: '%',
-                index: 16,
+                index: 5,
             }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("231231212212423424324323477343246663"),
+            VolumeId32::parse("231231212212423424324323477343246663"),
             Err(Error(ErrorKind::ParseSimpleLength { len: 36 }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("{00000000000000000000000000000000}"),
-            Err(Error(ErrorKind::ParseGroupCount { count: 1 }))
-        );
-
-        assert_eq!(
-            VolumeId32::try_parse("67e5504410b1426f9247bb680e5fe0c"),
+            VolumeId32::parse("67e5504410b1426f9247bb680e5fe0c"),
             Err(Error(ErrorKind::ParseSimpleLength { len: 31 }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("67e550X410b1426f9247bb680e5fe0cd"),
+            VolumeId32::parse("67e550Xb"),
             Err(Error(ErrorKind::ParseChar {
                 character: 'X',
                 index: 7,
@@ -375,21 +355,16 @@ mod tests {
         );
 
         assert_eq!(
-            VolumeId32::try_parse("67e550-4105b1426f9247bb680e5fe0c"),
-            Err(Error(ErrorKind::ParseGroupCount { count: 2 }))
-        );
-
-        assert_eq!(
-            VolumeId32::try_parse("F9168C5E-CEB2-4faa-B6BF1-02BF39FA1E4"),
+            VolumeId32::parse("F916BA-CE"),
             Err(Error(ErrorKind::ParseGroupLength {
-                group: 3,
-                len: 5,
-                index: 20,
+                group: 0,
+                len: 6,
+                index: 1,
             }))
         );
 
         assert_eq!(
-            VolumeId32::try_parse("\u{bcf3c}"),
+            VolumeId32::parse("\u{bcf3c}"),
             Err(Error(ErrorKind::ParseChar {
                 character: '\u{bcf3c}',
                 index: 1

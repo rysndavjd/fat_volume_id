@@ -20,13 +20,29 @@ extern crate std;
 extern crate core as std;
 
 mod error;
-mod fmt;
+pub mod fmt;
 mod parser;
 
-pub use error::{Error, ErrorKind};
+pub use error::Error;
 
 /// 32-bit Volume ID used in FAT12/16/32 and exFAT filesystems simliar to a UUID.
-/// Used for Identification of different volumes.
+///
+/// # Endianness
+///
+/// Microsoft’s FAT specification defines the FAT header as little-endian,
+/// which means the volume serial number is stored in little-endian byte order.
+/// This crate assumes integer inputs are already in the correct order by default,
+/// regardless of the endianness of the environment. Most methods that accept integers
+/// have a `_be` variant that assumes any integer values will need to have their bytes
+/// flipped, regardless of the endianness of the environment.
+///
+/// Most users won't need to worry about endianness unless they are on a big-endian
+/// environment. The important things to remember are:
+///
+/// - The endianness is in terms of the integer of the VolumeId32.
+/// - Byte-flipping in `_be` methods applies to each integer.
+/// - Endianness roundtrips, so if you create a VolumeId32 with `from_bytes_be`
+///   you'll get the same values back out with `as_bytes_be`.
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]
 #[cfg_attr(
@@ -74,7 +90,7 @@ impl VolumeId32 {
         return VolumeId32([0xffu8; 4]);
     }
 
-    /// Creates a VolumeId32 using supplied bytes exactly.
+    /// Creates a VolumeId32 using supplied bytes in little-endian.
     ///
     /// # Examples
     ///
@@ -94,27 +110,7 @@ impl VolumeId32 {
         return VolumeId32(bytes);
     }
 
-    /// Creates a VolumeId32 using supplied bytes in little endian.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// # use fat_volume_id::VolumeId32;
-    /// # use std::string::ToString;
-    /// let bytes = [0xa1, 0xa2, 0xa3, 0xa4];
-    ///
-    /// let volumeid32 = VolumeId32::from_bytes_le(bytes);
-    ///
-    /// assert_eq!(volumeid32.to_string(), "a4a3a2a1");
-    /// ```
-    #[inline]
-    pub const fn from_bytes_le(b: [u8; 4]) -> VolumeId32 {
-        return VolumeId32([b[3], b[2], b[1], b[0]]);
-    }
-
-    /// Creates a VolumeId32 using supplied bytes in big endian.
+    /// Creates a VolumeId32 using supplied bytes in big-endian.
     ///
     /// # Examples
     ///
@@ -127,14 +123,14 @@ impl VolumeId32 {
     ///
     /// let volumeid32 = VolumeId32::from_bytes_be(bytes);
     ///
-    /// assert_eq!(volumeid32.to_string(), "a1a2a3a4");
+    /// assert_eq!(volumeid32.to_string(), "a4a3a2a1");
     /// ```
     #[inline]
     pub const fn from_bytes_be(b: [u8; 4]) -> VolumeId32 {
-        return VolumeId32([b[0], b[1], b[2], b[3]]);
+        return VolumeId32([b[3], b[2], b[1], b[0]]);
     }
 
-    /// Creates a VolumeId32 using the supplied bytes exactly.
+    /// Creates a VolumeId32 using the supplied bytes in little-endian.
     ///
     /// # Errors
     ///
@@ -169,42 +165,7 @@ impl VolumeId32 {
         return Ok(VolumeId32::from_bytes(bytes));
     }
 
-    /// Creates a VolumeId32 using the supplied bytes in little endian.
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if `b` has any length other than 4.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// # use fat_volume_id::VolumeId32;
-    /// let bytes = [
-    ///     0xa1, 0xa2, 0xa3, 0xa4,
-    /// ];
-    ///
-    /// let volumeid32 = VolumeId32::from_slice_le(&bytes)
-    ///     .expect("Slice should be 4 bytes long");
-    ///
-    /// assert_eq!(
-    ///     "a4a3a2a1",
-    ///     volumeid32.to_string(),
-    /// );
-    /// ```
-    pub fn from_slice_le(b: &[u8]) -> Result<Self, Error> {
-        if b.len() != 4 {
-            return Err(Error(error::ErrorKind::ParseByteLength { len: b.len() }));
-        }
-
-        let mut bytes = [0u8; 4];
-        bytes.copy_from_slice(b);
-
-        return Ok(VolumeId32::from_bytes_le(bytes));
-    }
-
-    /// Creates a VolumeId32 using the supplied bytes in big endian.
+    /// Creates a VolumeId32 using the supplied bytes in big-endian.
     ///
     /// # Errors
     ///
@@ -224,7 +185,7 @@ impl VolumeId32 {
     ///     .expect("Slice should be 4 bytes long");
     ///
     /// assert_eq!(
-    ///     "a1a2a3a4",
+    ///     "a4a3a2a1",
     ///     volumeid32.to_string(),
     /// );
     /// ```
@@ -239,12 +200,7 @@ impl VolumeId32 {
         return Ok(VolumeId32::from_bytes_be(bytes));
     }
 
-    #[inline]
-    pub const fn as_bytes(&self) -> &[u8; 4] {
-        &self.0
-    }
-
-    /// Returns an array of bytes in little endian.
+    /// Returns an array of bytes in little-endian.
     ///
     /// # Examples
     ///
@@ -255,15 +211,16 @@ impl VolumeId32 {
     /// let volumeid32 = VolumeId32::from_bytes([0xa1, 0xa2, 0xa3, 0xa4]);
     ///
     /// assert_eq!(
-    ///     volumeid32.as_bytes_le(),
-    ///     [0xa4, 0xa3, 0xa2, 0xa1],
+    ///     volumeid32.as_bytes(),
+    ///     &[0xa1, 0xa2, 0xa3, 0xa4],
     /// );
     /// ```
-    pub fn as_bytes_le(&self) -> [u8; 4] {
-        return [self.0[3], self.0[2], self.0[1], self.0[0]];
+    #[inline]
+    pub const fn as_bytes(&self) -> &[u8; 4] {
+        &self.0
     }
 
-    /// Returns an array of bytes in big endian.
+    /// Returns an array of bytes in big-endian.
     ///
     /// # Examples
     ///

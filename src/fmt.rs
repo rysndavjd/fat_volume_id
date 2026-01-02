@@ -11,7 +11,7 @@
 // except according to those terms.
 
 use crate::{
-    Error, VolumeId32,
+    VolumeId32,
     std::{
         fmt,
         hash::{Hash, Hasher},
@@ -96,21 +96,25 @@ pub struct SimpleId32(VolumeId32);
 pub struct HyphenatedId32(VolumeId32);
 
 impl VolumeId32 {
+    /// Get a [`SimpleId32`] formatter.
     #[inline]
     pub const fn simple(self) -> SimpleId32 {
         SimpleId32(self)
     }
 
+    /// Get a borrowed [`SimpleId32`] formatter.
     #[inline]
     pub fn as_simple(&self) -> &SimpleId32 {
         unsafe { transmute(self) }
     }
 
+    /// Get a [`HyphenatedId32`] formatter.
     #[inline]
     pub const fn hyphenated(self) -> HyphenatedId32 {
         HyphenatedId32(self)
     }
 
+    /// Get a borrowed [`HyphenatedId32`] formatter.
     #[inline]
     pub fn as_hyphenated(&self) -> &HyphenatedId32 {
         unsafe { transmute(self) }
@@ -166,24 +170,61 @@ const fn format_hyphenatedid32(src: &[u8; 4], upper: bool) -> [u8; HyphenatedId3
 }
 
 impl SimpleId32 {
+    /// The length of a simple [`VolumeId32`] string.
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
     pub const LENGTH: usize = 8;
 
+    /// Creates a [`SimpleId32`] from a [`VolumeId32`].
+    ///     
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
+    /// [`SimpleId32`]: struct.SimpleId32.html
     pub const fn from_volumeid32(uuid: VolumeId32) -> Self {
         SimpleId32(uuid)
     }
 
+    /// Writes the [`VolumeId32`] as a lower-case simple string to `buffer`,
+    /// and returns the subslice of the buffer that contains the encoded UUID.
+    ///
+    /// This is slightly more efficient than using the formatting
+    /// infrastructure as it avoids virtual calls, and may avoid
+    /// double buffering.
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
+    ///
+    /// # Panics
+    ///
+    /// Panics if the buffer is not large enough: it must have length at least
+    /// [`LENGTH`]. [`VolumeId32::encode_buffer`] can be used to get a
+    /// sufficiently-large temporary buffer.
+    ///
+    /// [`LENGTH`]: #associatedconstant.LENGTH
+    /// [`VolumeId32::encode_buffer`]: ../struct.VolumeId32.html#method.encode_buffer
     #[inline]
     pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
-        Self::_encode_simpleid32(self.0.as_bytes(), buffer, false)
+        Self::_encode(self.0.as_bytes(), buffer, false)
     }
 
+    /// Writes the [`VolumeId32`] as an upper-case simple string to `buffer`,
+    /// and returns the subslice of the buffer that contains the encoded VolumeId32.
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
+    ///
+    /// # Panics
+    ///
+    /// Panics if the buffer is not large enough: it must have length at least
+    /// [`LENGTH`]. [`VolumeId32::encode_buffer`] can be used to get a
+    /// sufficiently-large temporary buffer.
+    ///
+    /// [`LENGTH`]: #associatedconstant.LENGTH
+    /// [`VolumeId32::encode_buffer`]: ../struct.VolumeId32.html#method.encode_buffer
     #[inline]
     pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
-        Self::_encode_simpleid32(self.0.as_bytes(), buffer, true)
+        Self::_encode(self.0.as_bytes(), buffer, true)
     }
 
     #[inline]
-    fn _encode_simpleid32<'b>(src: &[u8; 4], buffer: &'b mut [u8], upper: bool) -> &'b mut str {
+    fn _encode<'b>(src: &[u8; 4], buffer: &'b mut [u8], upper: bool) -> &'b mut str {
         assert!(
             buffer.len() >= Self::LENGTH,
             "Buffer too small to encode a SimpleId32"
@@ -196,34 +237,97 @@ impl SimpleId32 {
         unsafe { str::from_utf8_unchecked_mut(buf) }
     }
 
+    /// Get a reference to the underlying [`VolumeId32`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use fat_volume_id::VolumeId32;
+    ///
+    /// let simple = VolumeId32::nil().simple();
+    /// assert_eq!(*simple.as_volumeid32(), VolumeId32::nil());
+    /// ```
     pub const fn as_volumeid32(&self) -> &VolumeId32 {
         &self.0
     }
 
+    /// Consumes the [`SimpleId32`], returning the underlying [`VolumeId32`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use fat_volume_id::VolumeId32;
+    ///
+    /// let simple = VolumeId32::nil().simple();
+    /// assert_eq!(simple.into_volumeid32(), VolumeId32::nil());
+    /// ```
     pub const fn into_volumeid32(self) -> VolumeId32 {
         self.0
     }
 }
 
 impl HyphenatedId32 {
+    /// The length of a hyphenated [`VolumeId32`] string.
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
     pub const LENGTH: usize = 9;
 
+    /// Creates a [`HyphenatedId32`] from a [`VolumeId32`].
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
+    /// [`HyphenatedId32`]: struct.HyphenatedId32.html
     pub const fn from_volumeid32(uuid: VolumeId32) -> Self {
         HyphenatedId32(uuid)
     }
 
+    /// Writes the [`VolumeId32`] as a lower-case hyphenated string to
+    /// `buffer`, and returns the subslice of the buffer that contains the
+    /// encoded VolumeId32.
+    ///
+    /// This is slightly more efficient than using the formatting
+    /// infrastructure as it avoids virtual calls, and may avoid
+    /// double buffering.
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
+    ///
+    /// # Panics
+    ///
+    /// Panics if the buffer is not large enough: it must have length at least
+    /// [`LENGTH`]. [`VolumeId32::encode_buffer`] can be used to get a
+    /// sufficiently-large temporary buffer.
+    ///
+    /// [`LENGTH`]: #associatedconstant.LENGTH
+    /// [`VolumeId32::encode_buffer`]: ../struct.VolumeId32.html#method.encode_buffer
     #[inline]
     pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
-        Self::_encode_hyphenatedid32(self.0.as_bytes(), buffer, false)
+        Self::_encode(self.0.as_bytes(), buffer, false)
     }
 
+    /// Writes the [`VolumeId32`] as an upper-case hyphenated string to
+    /// `buffer`, and returns the subslice of the buffer that contains the
+    /// encoded VolumeId32.
+    ///
+    /// This is slightly more efficient than using the formatting
+    /// infrastructure as it avoids virtual calls, and may avoid
+    /// double buffering.
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
+    ///
+    /// # Panics
+    ///
+    /// Panics if the buffer is not large enough: it must have length at least
+    /// [`LENGTH`]. [`VolumeId32::encode_buffer`] can be used to get a
+    /// sufficiently-large temporary buffer.
+    ///
+    /// [`LENGTH`]: #associatedconstant.LENGTH
+    /// [`VolumeId32::encode_buffer`]: ../struct.VolumeId32.html#method.encode_buffer
     #[inline]
     pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
-        Self::_encode_hyphenatedid32(self.0.as_bytes(), buffer, true)
+        Self::_encode(self.0.as_bytes(), buffer, true)
     }
 
     #[inline]
-    fn _encode_hyphenatedid32<'b>(src: &[u8; 4], buffer: &'b mut [u8], upper: bool) -> &'b mut str {
+    fn _encode<'b>(src: &[u8; 4], buffer: &'b mut [u8], upper: bool) -> &'b mut str {
         assert!(
             buffer.len() >= Self::LENGTH,
             "Buffer too small to encode a SimpleId32"
@@ -236,10 +340,30 @@ impl HyphenatedId32 {
         unsafe { str::from_utf8_unchecked_mut(buf) }
     }
 
+    /// Get a reference to the underlying [`VolumeId32`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use fat_volume_id::VolumeId32;
+    ///
+    /// let hyphenated = VolumeId32::nil().hyphenated();
+    /// assert_eq!(*hyphenated.as_volumeid32(), VolumeId32::nil());
+    /// ```
     pub const fn as_volumeid32(&self) -> &VolumeId32 {
         &self.0
     }
 
+    /// Consumes the [`HyphenatedId32`], returning the underlying [`VolumeId32`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use fat_volume_id::VolumeId32;
+    ///
+    /// let hyphenated = VolumeId32::nil().hyphenated();
+    /// assert_eq!(hyphenated.into_volumeid32(), VolumeId32::nil());
+    /// ```
     pub const fn into_volumeid32(self) -> VolumeId32 {
         self.0
     }
