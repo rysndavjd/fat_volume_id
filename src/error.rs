@@ -4,7 +4,7 @@ use crate::std::fmt;
 pub struct Error(pub(crate) ErrorKind);
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum ErrorKind {
+pub(crate) enum ErrorKind {
     /// Invalid character in given string.
     ParseChar { character: char, index: usize },
     /// Invalid length of given string.
@@ -21,8 +21,8 @@ pub enum ErrorKind {
     },
     /// The input was not a valid UTF8 string
     ParseInvalidUTF8,
-    /// Some other parsing error occurred.
-    ParseOther,
+    // /// Some other parsing error occurred.
+    // ParseOther,
 }
 
 /// A string that is guaranteed to fail to parse to a [`VolumeId32`] or [`VolumeId64`].
@@ -87,7 +87,7 @@ impl<'a> InvalidVolumeId<'a> {
         } else {
             // There are 2 groups, one of them has an incorrect length
             const BLOCK_STARTS: [usize; 2] = [0, 5];
-            for i in 0..2 {
+            for i in 0..1 {
                 if group_bounds[i] != BLOCK_STARTS[i + 1] - 1 {
                     return Error(ErrorKind::ParseGroupLength {
                         group: i,
@@ -97,13 +97,12 @@ impl<'a> InvalidVolumeId<'a> {
                 }
             }
 
-            unreachable!()
-            // // The last group must be too long
-            // Error(ErrorKind::ParseGroupLength {
-            //     group: 4,
-            //     len: input_str.len() - BLOCK_STARTS[4],
-            //     index: BLOCK_STARTS[4] + 1,
-            // })
+            // // The last group must be too short/long
+            Error(ErrorKind::ParseGroupLength {
+                group: 1,
+                len: input_str.len() - BLOCK_STARTS[1],
+                index: BLOCK_STARTS[1] + 1,
+            })
         }
     }
 }
@@ -142,7 +141,7 @@ impl fmt::Display for Error {
                 )
             }
             ErrorKind::ParseInvalidUTF8 => write!(f, "non-UTF8 input"),
-            ErrorKind::ParseOther => write!(f, "failed to parse a UUID"),
+            // ErrorKind::ParseOther => write!(f, "failed to parse a UUID"),
         }
     }
 }
