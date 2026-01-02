@@ -23,9 +23,9 @@ mod error;
 mod fmt;
 mod parser;
 
-pub use error::Error;
+pub use error::{Error, ErrorKind};
 
-/// 32-bit Volume ID used in FAT12/16/32 filesystems simliar to a UUID.
+/// 32-bit Volume ID used in FAT12/16/32 and exFAT filesystems simliar to a UUID.
 /// Used for Identification of different volumes.
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]
@@ -239,6 +239,11 @@ impl VolumeId32 {
         return Ok(VolumeId32::from_bytes_be(bytes));
     }
 
+    #[inline]
+    pub const fn as_bytes(&self) -> &[u8; 4] {
+        &self.0
+    }
+
     /// Returns an array of bytes in little endian.
     ///
     /// # Examples
@@ -276,6 +281,25 @@ impl VolumeId32 {
     pub fn as_bytes_be(&self) -> [u8; 4] {
         return [self.0[0], self.0[1], self.0[2], self.0[3]];
     }
+
+    #[inline]
+    pub const fn into_bytes(self) -> [u8; 4] {
+        self.0
+    }
 }
 
+/// 64-bit Volume ID used in NTFS filesystems simliar to a UUID.
+/// Used for Identification of different volumes.
+#[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
+#[repr(transparent)]
+#[cfg_attr(
+    feature = "zerocopy",
+    derive(
+        zerocopy::IntoBytes,
+        zerocopy::FromBytes,
+        zerocopy::KnownLayout,
+        zerocopy::Immutable,
+        zerocopy::Unaligned
+    )
+)]
 pub struct VolumeId64([u8; 8]);
