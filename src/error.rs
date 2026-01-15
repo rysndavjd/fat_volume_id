@@ -1,19 +1,27 @@
-use crate::std::fmt;
+use crate::std::{error, fmt};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Error(pub(crate) ErrorKind);
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub(crate) enum ErrorKind {
-    /// Invalid character in given string.
+    /// Invalid character in the [`VolumeId32`] string.
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
     ParseChar { character: char, index: usize },
-    /// Invalid length of given string.
+    /// A simple [`VolumeId32`] didn't contain 8 characters.
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
     ParseSimpleLength { len: usize },
-    /// Invalid length of given byte array.
+    /// A byte array didn't contain 4 bytes
     ParseByteLength { len: usize },
-    /// Invalid number of groups in hyphenated variant.
+    /// A hyphenated [`VolumeId32`] didn't contain 2 groups
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
     ParseGroupCount { count: usize },
-    /// Invalid length of a group within a hyphenated variant.
+    /// A hyphenated [`VolumeId32`] had a group that wasn't the right length
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
     ParseGroupLength {
         group: usize,
         len: usize,
@@ -21,22 +29,21 @@ pub(crate) enum ErrorKind {
     },
     /// The input was not a valid UTF8 string
     ParseInvalidUTF8,
-    // /// Some other parsing error occurred.
-    // ParseOther,
+    /// Some other parsing error occurred.
+    ParseOther,
 }
 
-/// A string that is guaranteed to fail to parse to a [`VolumeId32`] or [`VolumeId64`].
+/// A string that is guaranteed to fail to parse to a [`VolumeId32`].
 ///
 /// This type acts as a lightweight error indicator, suggesting
 /// that the string cannot be parsed but offering no error
-/// details. To get details, use `InvalidVolumeId::into_err`.
+/// details. To get details, use `InvalidVolumeId32::into_err`.
 ///
 /// [`VolumeId32`]: ../struct.VolumeId32.html
-/// [`VolumeId64`]: ../struct.VolumeId64.html
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub struct InvalidVolumeId<'a>(pub(crate) &'a [u8]);
+pub struct InvalidVolumeId32<'a>(pub(crate) &'a [u8]);
 
-impl<'a> InvalidVolumeId<'a> {
+impl<'a> InvalidVolumeId32<'a> {
     /// Converts the lightweight error type into detailed diagnostics.
     pub fn into_err(self) -> Error {
         // Check whether or not the input was ever actually a valid UTF8 string
@@ -72,7 +79,7 @@ impl<'a> InvalidVolumeId<'a> {
         }
 
         if hyphen_count == 0 {
-            // This means that we tried and failed to parse a simple uuid.
+            // This means that we tried and failed to parse a simpleid32.
             // Since we verified that all the characters are valid, this means
             // that it MUST have an invalid length.
             Error(ErrorKind::ParseSimpleLength {
@@ -141,15 +148,9 @@ impl fmt::Display for Error {
                 )
             }
             ErrorKind::ParseInvalidUTF8 => write!(f, "non-UTF8 input"),
-            // ErrorKind::ParseOther => write!(f, "failed to parse a UUID"),
+            ErrorKind::ParseOther => write!(f, "failed to parse a VolumeId32 "),
         }
     }
 }
 
-#[cfg(feature = "std")]
-mod std_support {
-    use super::*;
-    use crate::std::error;
-
-    impl error::Error for Error {}
-}
+impl error::Error for Error {}
