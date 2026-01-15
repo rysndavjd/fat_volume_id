@@ -11,8 +11,8 @@
 // except according to those terms.
 
 use crate::{
-    Error, VolumeId32,
-    error::InvalidVolumeId,
+    VolumeId32,
+    error::{Error, ErrorKind, InvalidVolumeId32},
     fmt::{HyphenatedId32, SimpleId32},
     std::str::FromStr,
 };
@@ -24,7 +24,7 @@ impl FromStr for VolumeId32 {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::parse(s)
+        Self::try_parse(s).map_err(|_| Error(ErrorKind::ParseOther))
     }
 }
 
@@ -32,7 +32,7 @@ impl TryFrom<&'_ str> for VolumeId32 {
     type Error = Error;
 
     fn try_from(s: &'_ str) -> Result<Self, Self::Error> {
-        Self::parse(s)
+        Self::try_parse(s).map_err(|_| Error(ErrorKind::ParseOther))
     }
 }
 
@@ -41,12 +41,14 @@ impl TryFrom<String> for VolumeId32 {
     type Error = Error;
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
-        Self::parse(s.as_ref())
+        Self::try_parse(s.as_ref()).map_err(|_| Error(ErrorKind::ParseOther))
     }
 }
 
 impl VolumeId32 {
     /// Parses a [`VolumeId32`] from a string slice of hexadecimal digits.
+    /// Automatically gets additional infomation of errors if any are returned
+    /// using `InvalidVolumeId32::into_err`.
     ///
     /// To parse a [`VolumeId32`] from a byte stream instead of a UTF8 string, see
     /// [`try_parse_ascii`].
@@ -61,10 +63,12 @@ impl VolumeId32 {
     /// ```
     /// [`try_parse_ascii`]: #method.try_parse_ascii
     pub fn parse(input: &str) -> Result<Self, Error> {
-        Self::try_parse_ascii(input.as_bytes()).map_err(InvalidVolumeId::into_err)
+        Self::try_parse_ascii(input.as_bytes()).map_err(InvalidVolumeId32::into_err)
     }
 
     /// Parses a [`VolumeId32`] from a string slice of hexadecimal digits.
+    /// Without getting additional infomation on errors instead returning
+    /// `InvalidVolumeId32`.
     ///
     /// To parse a [`VolumeId32`] from a byte stream instead of a UTF8 string, see
     /// [`try_parse_ascii`].
@@ -78,7 +82,7 @@ impl VolumeId32 {
     /// assert_eq!(volumeid32.to_string(), "49aa648a");
     /// ```
     /// [`try_parse_ascii`]: #method.try_parse_ascii
-    pub const fn try_parse<'a>(input: &'a str) -> Result<Self, InvalidVolumeId<'a>> {
+    pub const fn try_parse<'a>(input: &'a str) -> Result<Self, InvalidVolumeId32<'a>> {
         Self::try_parse_ascii(input.as_bytes())
     }
 
@@ -97,25 +101,25 @@ impl VolumeId32 {
     /// assert_eq!(volumeid32.to_string(), "49aa648a");
     /// ```
     /// [`try_parse`]: #method.try_parse
-    pub const fn try_parse_ascii<'a>(s: &'a [u8]) -> Result<Self, InvalidVolumeId<'a>> {
+    pub const fn try_parse_ascii<'a>(s: &'a [u8]) -> Result<Self, InvalidVolumeId32<'a>> {
         match (s.len(), s) {
             (8, s) => match parse_simpleid32(s) {
                 Ok(bytes) => Ok(VolumeId32::from_bytes(bytes)),
                 Err(e) => Err(e),
             },
-            (9, s) => match parse_hyphenated(s) {
+            (9, s) => match parse_hyphenatedid32(s) {
                 Ok(bytes) => Ok(VolumeId32::from_bytes(bytes)),
                 Err(e) => Err(e),
             },
-            _ => Err(InvalidVolumeId(s)),
+            _ => Err(InvalidVolumeId32(s)),
         }
     }
 }
 
 #[inline]
-pub(crate) const fn parse_simpleid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolumeId<'_>> {
+pub(crate) const fn parse_simpleid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolumeId32<'_>> {
     if s.len() != SimpleId32::LENGTH {
-        return Err(InvalidVolumeId(s));
+        return Err(InvalidVolumeId32(s));
     }
 
     let mut buf = [0u8; 4];
@@ -131,7 +135,7 @@ pub(crate) const fn parse_simpleid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolu
         // We use `0xff` as a sentinel value to indicate
         // an invalid hex character sequence (like the letter `G`)
         if h1 | h2 == 0xff {
-            return Err(InvalidVolumeId(s));
+            return Err(InvalidVolumeId32(s));
         }
 
         // The upper nibble needs to be shifted into position
@@ -144,9 +148,9 @@ pub(crate) const fn parse_simpleid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolu
 }
 
 #[inline]
-pub(crate) const fn parse_hyphenated(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolumeId<'_>> {
+pub(crate) const fn parse_hyphenatedid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolumeId32<'_>> {
     if s.len() != HyphenatedId32::LENGTH {
-        return Err(InvalidVolumeId(s));
+        return Err(InvalidVolumeId32(s));
     }
 
     // We look at two hex-encoded values (4 chars) at a time because
@@ -161,7 +165,7 @@ pub(crate) const fn parse_hyphenated(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolu
     // First, ensure the hyphen appear in the right places
     match [s[4]] {
         [b'-'] => {}
-        _ => return Err(InvalidVolumeId(s)),
+        _ => return Err(InvalidVolumeId32(s)),
     }
 
     let positions: [u8; 2] = [0, 5];
@@ -180,7 +184,7 @@ pub(crate) const fn parse_hyphenated(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolu
         let h4 = HEX_TABLE[s[(i + 3) as usize] as usize];
 
         if h1 | h2 | h3 | h4 == 0xff {
-            return Err(InvalidVolumeId(s));
+            return Err(InvalidVolumeId32(s));
         }
 
         buf[j * 2] = SHL4_TABLE[h1 as usize] | h2;

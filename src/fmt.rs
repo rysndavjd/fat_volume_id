@@ -12,11 +12,7 @@
 
 use crate::{
     VolumeId32,
-    std::{
-        fmt,
-        hash::{Hash, Hasher},
-        mem::transmute,
-    },
+    std::{borrow::Borrow, fmt, hash::Hash, mem::transmute},
 };
 
 #[cfg(feature = "std")]
@@ -56,12 +52,6 @@ impl fmt::UpperHex for VolumeId32 {
             write!(f, "{:02X}", byte)?;
         }
         return Ok(());
-    }
-}
-
-impl Hash for VolumeId32 {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write(&self.0);
     }
 }
 
@@ -179,12 +169,12 @@ impl SimpleId32 {
     ///     
     /// [`VolumeId32`]: ../struct.VolumeId32.html
     /// [`SimpleId32`]: struct.SimpleId32.html
-    pub const fn from_volumeid32(uuid: VolumeId32) -> Self {
-        SimpleId32(uuid)
+    pub const fn from_volumeid32(volumeid32: VolumeId32) -> Self {
+        SimpleId32(volumeid32)
     }
 
     /// Writes the [`VolumeId32`] as a lower-case simple string to `buffer`,
-    /// and returns the subslice of the buffer that contains the encoded UUID.
+    /// and returns the subslice of the buffer that contains the encoded VolumeId32.
     ///
     /// This is slightly more efficient than using the formatting
     /// infrastructure as it avoids virtual calls, and may avoid
@@ -230,7 +220,7 @@ impl SimpleId32 {
             "Buffer too small to encode a SimpleId32"
         );
 
-        let buf: &mut [u8; Self::LENGTH] = buffer[..Self::LENGTH].as_mut_array().unwrap();
+        let buf: &mut [u8; Self::LENGTH] = (&mut buffer[..Self::LENGTH]).try_into().unwrap();
         *buf = format_simpleid32(src, upper);
 
         // SAFETY: The encoded buffer is ASCII encoded
@@ -276,8 +266,8 @@ impl HyphenatedId32 {
     ///
     /// [`VolumeId32`]: ../struct.VolumeId32.html
     /// [`HyphenatedId32`]: struct.HyphenatedId32.html
-    pub const fn from_volumeid32(uuid: VolumeId32) -> Self {
-        HyphenatedId32(uuid)
+    pub const fn from_volumeid32(volumeid32: VolumeId32) -> Self {
+        HyphenatedId32(volumeid32)
     }
 
     /// Writes the [`VolumeId32`] as a lower-case hyphenated string to
@@ -316,8 +306,7 @@ impl HyphenatedId32 {
     /// # Panics
     ///
     /// Panics if the buffer is not large enough: it must have length at least
-    /// [`LENGTH`]. [`VolumeId32::encode_buffer`] can be used to get a
-    /// sufficiently-large temporary buffer.
+    /// [`LENGTH`].
     ///
     /// [`LENGTH`]: #associatedconstant.LENGTH
     /// [`VolumeId32::encode_buffer`]: ../struct.VolumeId32.html#method.encode_buffer
@@ -333,7 +322,7 @@ impl HyphenatedId32 {
             "Buffer too small to encode a SimpleId32"
         );
 
-        let buf: &mut [u8; Self::LENGTH] = buffer[..Self::LENGTH].as_mut_array().unwrap();
+        let buf: &mut [u8; Self::LENGTH] = (&mut buffer[..Self::LENGTH]).try_into().unwrap();
         *buf = format_hyphenatedid32(src, upper);
 
         // SAFETY: The encoded buffer is ASCII encoded
@@ -367,4 +356,96 @@ impl HyphenatedId32 {
     pub const fn into_volumeid32(self) -> VolumeId32 {
         self.0
     }
+}
+
+// I have no idea how these macros work so they are just copy and pasted from the UUID crate
+macro_rules! impl_fmt_traits {
+    ($($T:ident<$($a:lifetime),*>),+) => {$(
+        impl<$($a),*> fmt::Display for $T<$($a),*> {
+            #[inline]
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                fmt::LowerHex::fmt(self, f)
+            }
+        }
+
+        impl<$($a),*> fmt::LowerHex for $T<$($a),*> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.write_str(self.encode_lower(&mut [0; Self::LENGTH]))
+            }
+        }
+
+        impl<$($a),*> fmt::UpperHex for $T<$($a),*> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.write_str(self.encode_upper(&mut [0; Self::LENGTH]))
+            }
+        }
+
+        impl_fmt_from!($T<$($a),*>);
+    )+}
+}
+
+macro_rules! impl_fmt_from {
+    ($T:ident<>) => {
+        impl From<VolumeId32> for $T {
+            #[inline]
+            fn from(f: VolumeId32) -> Self {
+                $T(f)
+            }
+        }
+
+        impl From<$T> for VolumeId32 {
+            #[inline]
+            fn from(f: $T) -> Self {
+                f.into_volumeid32()
+            }
+        }
+
+        impl AsRef<VolumeId32> for $T {
+            #[inline]
+            fn as_ref(&self) -> &VolumeId32 {
+                &self.0
+            }
+        }
+
+        impl Borrow<VolumeId32> for $T {
+            #[inline]
+            fn borrow(&self) -> &VolumeId32 {
+                &self.0
+            }
+        }
+    };
+    ($T:ident<$a:lifetime>) => {
+        impl<$a> From<&$a VolumeId32> for $T<$a> {
+            #[inline]
+            fn from(f: &$a VolumeId32) -> Self {
+                $T::from_volumeid32_ref(f)
+            }
+        }
+
+        impl<$a> From<$T<$a>> for &$a VolumeId32 {
+            #[inline]
+            fn from(f: $T<$a>) -> &$a VolumeId32 {
+                f.0
+            }
+        }
+
+        impl<$a> AsRef<VolumeId32> for $T<$a> {
+            #[inline]
+            fn as_ref(&self) -> &VolumeId32 {
+                self.0
+            }
+        }
+
+        impl<$a> Borrow<VolumeId32> for $T<$a> {
+            #[inline]
+            fn borrow(&self) -> &VolumeId32 {
+                self.0
+            }
+        }
+    };
+}
+
+impl_fmt_traits! {
+    SimpleId32<>,
+    HyphenatedId32<>
 }
