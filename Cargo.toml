@@ -6,7 +6,7 @@ description = "A library to generate and parse Volume Identifiers in FAT12/16/32
 license = "Apache-2.0 OR MIT"
 
 [dependencies]
-zerocopy = { version = "0.8.31", default-features = false, features = ["derive"], optional = true}
+zerocopy = { version = "0.8.33", default-features = false, features = ["derive"], optional = true}
 
 [features]
 default = ["std", "zerocopy"]
