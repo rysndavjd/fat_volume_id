@@ -11,7 +11,7 @@
 // except according to those terms.
 
 use crate::{
-    VolumeId32,
+    id32::VolumeId32,
     std::{borrow::Borrow, fmt, hash::Hash, mem::transmute},
 };
 

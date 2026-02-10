@@ -11,14 +11,13 @@
 // except according to those terms.
 
 use crate::{
-    VolumeId32,
-    error::{Error, ErrorKind, InvalidVolumeId32},
-    fmt::{HyphenatedId32, SimpleId32},
+    id32::{
+        VolumeId32,
+        error::{Error, ErrorKind, InvalidVolumeId32},
+        fmt::{HyphenatedId32, SimpleId32},
+    },
     std::str::FromStr,
 };
-
-#[cfg(feature = "std")]
-use crate::std::string::String;
 
 impl FromStr for VolumeId32 {
     type Err = Error;
@@ -37,10 +36,10 @@ impl TryFrom<&'_ str> for VolumeId32 {
 }
 
 #[cfg(feature = "std")]
-impl TryFrom<String> for VolumeId32 {
+impl TryFrom<std::string::String> for VolumeId32 {
     type Error = Error;
 
-    fn try_from(s: String) -> Result<Self, Self::Error> {
+    fn try_from(s: std::string::String) -> Result<Self, Self::Error> {
         Self::try_parse(s.as_ref()).map_err(|_| Error(ErrorKind::ParseOther))
     }
 }
@@ -233,7 +232,7 @@ const SHL4_TABLE: &[u8; 256] = &{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::ErrorKind;
+    use crate::id32::error::ErrorKind;
 
     #[test]
     fn test_parse_volumeid32_valid() {
