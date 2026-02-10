@@ -71,6 +71,8 @@ impl fmt::UpperHex for VolumeId32 {
 #[repr(transparent)]
 pub struct SimpleId32(VolumeId32);
 
+/// Format a [`VolumeId32`] as a hyphenated string, like
+/// `6ddc-f6da`
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(
     feature = "zerocopy",
@@ -185,11 +187,9 @@ impl SimpleId32 {
     /// # Panics
     ///
     /// Panics if the buffer is not large enough: it must have length at least
-    /// [`LENGTH`]. [`VolumeId32::encode_buffer`] can be used to get a
-    /// sufficiently-large temporary buffer.
+    /// [`LENGTH`].
     ///
     /// [`LENGTH`]: #associatedconstant.LENGTH
-    /// [`VolumeId32::encode_buffer`]: ../struct.VolumeId32.html#method.encode_buffer
     #[inline]
     pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
         Self::_encode(self.0.as_bytes(), buffer, false)
@@ -203,11 +203,9 @@ impl SimpleId32 {
     /// # Panics
     ///
     /// Panics if the buffer is not large enough: it must have length at least
-    /// [`LENGTH`]. [`VolumeId32::encode_buffer`] can be used to get a
-    /// sufficiently-large temporary buffer.
+    /// [`LENGTH`].
     ///
     /// [`LENGTH`]: #associatedconstant.LENGTH
-    /// [`VolumeId32::encode_buffer`]: ../struct.VolumeId32.html#method.encode_buffer
     #[inline]
     pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
         Self::_encode(self.0.as_bytes(), buffer, true)
@@ -283,11 +281,9 @@ impl HyphenatedId32 {
     /// # Panics
     ///
     /// Panics if the buffer is not large enough: it must have length at least
-    /// [`LENGTH`]. [`VolumeId32::encode_buffer`] can be used to get a
-    /// sufficiently-large temporary buffer.
+    /// [`LENGTH`].
     ///
     /// [`LENGTH`]: #associatedconstant.LENGTH
-    /// [`VolumeId32::encode_buffer`]: ../struct.VolumeId32.html#method.encode_buffer
     #[inline]
     pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
         Self::_encode(self.0.as_bytes(), buffer, false)
@@ -309,7 +305,6 @@ impl HyphenatedId32 {
     /// [`LENGTH`].
     ///
     /// [`LENGTH`]: #associatedconstant.LENGTH
-    /// [`VolumeId32::encode_buffer`]: ../struct.VolumeId32.html#method.encode_buffer
     #[inline]
     pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
         Self::_encode(self.0.as_bytes(), buffer, true)

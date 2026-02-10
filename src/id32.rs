@@ -1,5 +1,5 @@
 mod error;
-mod fmt;
+pub mod fmt;
 mod parser;
 
 use crate::id32::error::{Error, ErrorKind};
