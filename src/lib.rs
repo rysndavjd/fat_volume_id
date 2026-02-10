@@ -22,4 +22,8 @@ extern crate core as std;
 mod id32;
 mod id64;
 
-pub use id32::VolumeId32;
+#[cfg(feature = "id32")]
+pub use id32::{
+    VolumeId32,
+    fmt::{HyphenatedId32, SimpleId32},
+};
