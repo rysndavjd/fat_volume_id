@@ -1,3 +1,5 @@
+mod error;
+
 /// 64-bit Volume ID used in NTFS filesystems simliar to a UUID.
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]

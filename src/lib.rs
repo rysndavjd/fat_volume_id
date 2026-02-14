@@ -10,7 +10,23 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+//! Generate and parse 32bit and 64bit volume serial number or volume identifier.
+//! 
+//! Example of a 32bit volume identifier:
+//! 
+//! ```text
+//! 7E5D-2CF4
+//! ```
+//! 
+//! Example of a 64bit volume identifier:
+//! 
+//! ```text
+//! CC0E01BD0E01A196
+//! ```
+
+
 #![no_std]
+#![deny(missing_debug_implementations, missing_docs)]
 #![allow(clippy::needless_return)]
 
 #[cfg(any(feature = "std", test))]

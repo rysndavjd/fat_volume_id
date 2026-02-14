@@ -4,7 +4,7 @@ mod parser;
 
 use crate::id32::error::{Error, ErrorKind};
 
-/// 32-bit Volume ID used in FAT12/16/32 and exFAT filesystems simliar to a UUID.
+/// 32-bit Volume ID used in FAT12/16/32 and exFAT filesystems.
 ///
 /// # Endianness
 ///

@@ -2,15 +2,15 @@
 name = "fat_volume_id"
 version = "0.1.0"
 edition = "2024"
-description = "A library to generate and parse Volume Identifiers in FAT12/16/32 and exFat."
+description = "A library to generate and parse Volume Identifiers in FAT12/16/32, exFAT and NTFS."
 license = "Apache-2.0 OR MIT"
 
 [dependencies]
 zerocopy = { version = "0.8.33", default-features = false, features = ["derive"], optional = true}
 
 [features]
-default = ["std", "id32"]
-std = []
+default = ["id32", "std"]
+std = ["zerocopy/std"]
 zerocopy = ["dep:zerocopy"]
 id32 = []
 id64 = []
