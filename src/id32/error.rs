@@ -1,4 +1,4 @@
-use crate::std::{error, fmt};
+use crate::std::{fmt, str::from_utf8};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Error(pub(crate) ErrorKind);
@@ -47,7 +47,7 @@ impl<'a> InvalidVolumeId32<'a> {
     /// Converts the lightweight error type into detailed diagnostics.
     pub fn into_err(self) -> Error {
         // Check whether or not the input was ever actually a valid UTF8 string
-        let input_str = match std::str::from_utf8(self.0) {
+        let input_str = match from_utf8(self.0) {
             Ok(s) => s,
             Err(_) => return Error(ErrorKind::ParseInvalidUTF8),
         };
@@ -153,4 +153,4 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+impl crate::std::error::Error for Error {}

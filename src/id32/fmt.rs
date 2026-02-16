@@ -15,8 +15,8 @@ use crate::{
     std::{borrow::Borrow, fmt, hash::Hash, mem::transmute},
 };
 
-#[cfg(feature = "std")]
-use crate::std::string::{String, ToString};
+#[cfg(feature = "alloc")]
+use crate::alloc::string::{String, ToString};
 
 impl fmt::Debug for VolumeId32 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -30,7 +30,7 @@ impl fmt::Display for VolumeId32 {
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 impl From<VolumeId32> for String {
     fn from(volumeid32: VolumeId32) -> Self {
         volumeid32.to_string()

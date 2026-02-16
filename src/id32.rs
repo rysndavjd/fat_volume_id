@@ -332,36 +332,20 @@ impl VolumeId32 {
         &self.0
     }
 
-    /// Returns an array of bytes in big-endian.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// # use fat_volume_id::VolumeId32;
-    /// let volumeid32 = VolumeId32::from_bytes([0xa1, 0xa2, 0xa3, 0xa4]);
-    ///
-    /// assert_eq!(
-    ///     volumeid32.as_bytes_be(),
-    ///     [0xa1, 0xa2, 0xa3, 0xa4],
-    /// );
-    /// ```
-    pub fn as_bytes_be(&self) -> [u8; 4] {
-        return [self.0[0], self.0[1], self.0[2], self.0[3]];
-    }
-
     /// Consumes self and returns the underlying byte value of the VolumeId32.
     ///
     /// # Examples
     ///
     /// ```
     /// # use fat_volume_id::VolumeId32;
-    /// let bytes = [
-    ///     0xa1, 0xa2, 0xa3, 0xa4,
-    /// ];
-    /// let volumeid32 = VolumeId32::from_bytes(bytes);
-    /// assert_eq!(bytes, volumeid32.into_bytes());
+    ///
+    /// let volumeid32 = VolumeId32::parse("a1a2-a3a4")
+    ///     .unwrap();
+    ///
+    /// assert_eq!(
+    ///     volumeid32.into_bytes(),
+    ///     [0xa1, 0xa2, 0xa3, 0xa4]
+    /// );
     /// ```
     #[inline]
     pub const fn into_bytes(self) -> [u8; 4] {
@@ -403,8 +387,8 @@ impl VolumeId32 {
     }
 }
 
-impl std::hash::Hash for VolumeId32 {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+impl crate::std::hash::Hash for VolumeId32 {
+    fn hash<H: crate::std::hash::Hasher>(&self, state: &mut H) {
         state.write(&self.0);
     }
 }
@@ -423,18 +407,18 @@ impl AsRef<[u8]> for VolumeId32 {
     }
 }
 
-#[cfg(feature = "std")]
-impl From<VolumeId32> for std::vec::Vec<u8> {
+#[cfg(feature = "alloc")]
+impl From<VolumeId32> for crate::alloc::vec::Vec<u8> {
     fn from(value: VolumeId32) -> Self {
         value.0.to_vec()
     }
 }
 
-#[cfg(feature = "std")]
-impl TryFrom<std::vec::Vec<u8>> for VolumeId32 {
+#[cfg(feature = "alloc")]
+impl TryFrom<crate::alloc::vec::Vec<u8>> for VolumeId32 {
     type Error = Error;
 
-    fn try_from(value: std::vec::Vec<u8>) -> Result<Self, Self::Error> {
+    fn try_from(value: crate::alloc::vec::Vec<u8>) -> Result<Self, Self::Error> {
         VolumeId32::from_slice(&value)
     }
 }

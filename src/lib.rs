@@ -11,19 +11,18 @@
 // except according to those terms.
 
 //! Generate and parse 32bit and 64bit volume serial number or volume identifier.
-//! 
+//!
 //! Example of a 32bit volume identifier:
-//! 
+//!
 //! ```text
 //! 7E5D-2CF4
 //! ```
-//! 
+//!
 //! Example of a 64bit volume identifier:
-//! 
+//!
 //! ```text
 //! CC0E01BD0E01A196
 //! ```
-
 
 #![no_std]
 #![deny(missing_debug_implementations, missing_docs)]
@@ -31,6 +30,9 @@
 
 #[cfg(any(feature = "std", test))]
 extern crate std;
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 #[cfg(all(not(feature = "std"), not(test)))]
 extern crate core as std;
@@ -43,3 +45,6 @@ pub use id32::{
     VolumeId32,
     fmt::{HyphenatedId32, SimpleId32},
 };
+
+#[cfg(feature = "id64")]
+pub use id64::VolumeId64;
