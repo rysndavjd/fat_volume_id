@@ -35,11 +35,11 @@ impl TryFrom<&'_ str> for VolumeId32 {
     }
 }
 
-#[cfg(feature = "std")]
-impl TryFrom<std::string::String> for VolumeId32 {
+#[cfg(feature = "alloc")]
+impl TryFrom<crate::alloc::string::String> for VolumeId32 {
     type Error = Error;
 
-    fn try_from(s: std::string::String) -> Result<Self, Self::Error> {
+    fn try_from(s: crate::alloc::string::String) -> Result<Self, Self::Error> {
         Self::try_parse(s.as_ref()).map_err(|_| Error(ErrorKind::ParseOther))
     }
 }
