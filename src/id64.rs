@@ -1,5 +1,6 @@
 mod error;
-mod fmt;
+pub mod fmt;
+mod parser;
 use crate::id64::error::{Error, ErrorKind};
 
 /// 64-bit Volume ID used in NTFS filesystems.
@@ -282,11 +283,11 @@ impl VolumeId64 {
     /// let hi = 0xa1a2a3a4;
     /// let lo = 0xa5a6a7a8;
     ///
-    /// let volumeid32 = VolumeId64::from_u32_pair_be(hi, lo);
+    /// let volumeid64 = VolumeId64::from_u32_pair_be(hi, lo);
     ///
     /// assert_eq!(
     ///     "a1a2a3a4a5a6a7a8",
-    ///     volumeid32.simple().to_string(),
+    ///     volumeid64.simple().to_string(),
     /// );
     /// ```
     pub fn from_u32_pair_be(high_bits: u32, low_bits: u32) -> Self {

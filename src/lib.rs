@@ -48,4 +48,4 @@ pub use id32::{
 };
 
 #[cfg(feature = "id64")]
-pub use id64::VolumeId64;
+pub use id64::{VolumeId64, fmt::SimpleId64};

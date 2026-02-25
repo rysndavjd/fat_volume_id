@@ -347,36 +347,38 @@ impl HyphenatedId32 {
     }
 }
 
-impl fmt::Display for &SimpleId32 {
+impl fmt::Display for SimpleId32 {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::LowerHex::fmt(self, f)
+        fmt::LowerHex::fmt(&self, f)
     }
 }
 
-impl fmt::LowerHex for &SimpleId32 {
+impl fmt::LowerHex for SimpleId32 {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.encode_lower(&mut [0; SimpleId32::LENGTH]))
+        f.write_str(self.encode_lower(&mut [0; Self::LENGTH]))
     }
 }
 
-impl fmt::UpperHex for &SimpleId32 {
+impl fmt::UpperHex for SimpleId32 {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.encode_upper(&mut [0; SimpleId32::LENGTH]))
+        f.write_str(self.encode_upper(&mut [0; Self::LENGTH]))
     }
 }
 
 impl From<VolumeId32> for SimpleId32 {
     #[inline]
-    fn from(v: VolumeId32) -> Self {
-        SimpleId32(v)
+    fn from(f: VolumeId32) -> Self {
+        SimpleId32(f)
     }
 }
 
 impl From<SimpleId32> for VolumeId32 {
     #[inline]
-    fn from(v: SimpleId32) -> Self {
-        v.0
+    fn from(f: SimpleId32) -> Self {
+        f.into_volumeid32()
     }
 }
 
@@ -394,36 +396,52 @@ impl Borrow<VolumeId32> for SimpleId32 {
     }
 }
 
-impl fmt::Display for &HyphenatedId32 {
+impl<'a> From<&'a VolumeId32> for SimpleId32 {
+    #[inline]
+    fn from(f: &'a VolumeId32) -> Self {
+        f.simple()
+    }
+}
+
+impl<'a> From<&'a SimpleId32> for VolumeId32 {
+    #[inline]
+    fn from(f: &'a SimpleId32) -> Self {
+        f.0
+    }
+}
+
+impl fmt::Display for HyphenatedId32 {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::LowerHex::fmt(self, f)
+        fmt::LowerHex::fmt(&self, f)
     }
 }
 
-impl fmt::LowerHex for &HyphenatedId32 {
+impl fmt::LowerHex for HyphenatedId32 {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.encode_lower(&mut [0; HyphenatedId32::LENGTH]))
+        f.write_str(self.encode_lower(&mut [0; Self::LENGTH]))
     }
 }
 
-impl fmt::UpperHex for &HyphenatedId32 {
+impl fmt::UpperHex for HyphenatedId32 {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.encode_upper(&mut [0; HyphenatedId32::LENGTH]))
+        f.write_str(self.encode_upper(&mut [0; Self::LENGTH]))
     }
 }
 
 impl From<VolumeId32> for HyphenatedId32 {
     #[inline]
-    fn from(v: VolumeId32) -> Self {
-        HyphenatedId32(v)
+    fn from(f: VolumeId32) -> Self {
+        HyphenatedId32(f)
     }
 }
 
 impl From<HyphenatedId32> for VolumeId32 {
     #[inline]
-    fn from(v: HyphenatedId32) -> Self {
-        v.0
+    fn from(f: HyphenatedId32) -> Self {
+        f.into_volumeid32()
     }
 }
 
@@ -441,16 +459,16 @@ impl Borrow<VolumeId32> for HyphenatedId32 {
     }
 }
 
-impl<'a> From<&'a VolumeId32> for &'a HyphenatedId32 {
+impl<'a> From<&'a VolumeId32> for HyphenatedId32 {
     #[inline]
-    fn from(v: &'a VolumeId32) -> Self {
-        v.as_hyphenated()
+    fn from(f: &'a VolumeId32) -> Self {
+        f.hyphenated()
     }
 }
 
-impl<'a> From<&'a HyphenatedId32> for &'a VolumeId32 {
+impl<'a> From<&'a HyphenatedId32> for VolumeId32 {
     #[inline]
-    fn from(v: &'a HyphenatedId32) -> Self {
-        &v.0
+    fn from(f: &'a HyphenatedId32) -> Self {
+        f.0
     }
 }

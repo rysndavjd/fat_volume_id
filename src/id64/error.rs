@@ -89,7 +89,7 @@ impl fmt::Display for Error {
                 write!(f, "invalid byte length, found {}", len)
             }
             ErrorKind::ParseInvalidUTF8 => write!(f, "non-UTF8 input"),
-            ErrorKind::ParseOther => write!(f, "failed to parse a VolumeId64 "),
+            ErrorKind::ParseOther => write!(f, "failed to parse a VolumeId64"),
         }
     }
 }

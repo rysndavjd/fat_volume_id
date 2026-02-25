@@ -148,7 +148,7 @@ impl fmt::Display for Error {
                 )
             }
             ErrorKind::ParseInvalidUTF8 => write!(f, "non-UTF8 input"),
-            ErrorKind::ParseOther => write!(f, "failed to parse a VolumeId32 "),
+            ErrorKind::ParseOther => write!(f, "failed to parse a VolumeId32"),
         }
     }
 }
