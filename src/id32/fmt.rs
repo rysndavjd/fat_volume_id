@@ -1,6 +1,6 @@
 // Copyright 2013-2014 The Rust Project Developers.
 // Copyright 2018 The Uuid Project Developers.
-// Copyright 2025 rysndavjd.
+// Copyright 2025-2026 rysndavjd.
 //
 // See the COPYRIGHT file at the top-level directory of this distribution.
 //
@@ -11,6 +11,7 @@
 // except according to those terms.
 
 use crate::{
+    common::{LOWER, UPPER},
     id32::VolumeId32,
     std::{borrow::Borrow, fmt, hash::Hash, mem::transmute},
 };
@@ -113,19 +114,12 @@ impl VolumeId32 {
     }
 }
 
-const UPPER: [u8; 16] = [
-    b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'A', b'B', b'C', b'D', b'E', b'F',
-];
-const LOWER: [u8; 16] = [
-    b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'a', b'b', b'c', b'd', b'e', b'f',
-];
-
 #[inline]
 const fn format_simpleid32(src: &[u8; 4], upper: bool) -> [u8; SimpleId32::LENGTH] {
     let lut = if upper { &UPPER } else { &LOWER };
     let mut dst = [0; SimpleId32::LENGTH];
     let mut i = 0;
-    while i < 16 {
+    while i < (SimpleId32::LENGTH / 2) {
         let x = src[i];
         dst[i * 2] = lut[(x >> 4) as usize];
         dst[i * 2 + 1] = lut[(x & 0x0f) as usize];
@@ -353,94 +347,110 @@ impl HyphenatedId32 {
     }
 }
 
-// I have no idea how these macros work so they are just copy and pasted from the UUID crate
-macro_rules! impl_fmt_traits {
-    ($($T:ident<$($a:lifetime),*>),+) => {$(
-        impl<$($a),*> fmt::Display for $T<$($a),*> {
-            #[inline]
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                fmt::LowerHex::fmt(self, f)
-            }
-        }
-
-        impl<$($a),*> fmt::LowerHex for $T<$($a),*> {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str(self.encode_lower(&mut [0; Self::LENGTH]))
-            }
-        }
-
-        impl<$($a),*> fmt::UpperHex for $T<$($a),*> {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str(self.encode_upper(&mut [0; Self::LENGTH]))
-            }
-        }
-
-        impl_fmt_from!($T<$($a),*>);
-    )+}
+impl fmt::Display for &SimpleId32 {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::LowerHex::fmt(self, f)
+    }
 }
 
-macro_rules! impl_fmt_from {
-    ($T:ident<>) => {
-        impl From<VolumeId32> for $T {
-            #[inline]
-            fn from(f: VolumeId32) -> Self {
-                $T(f)
-            }
-        }
-
-        impl From<$T> for VolumeId32 {
-            #[inline]
-            fn from(f: $T) -> Self {
-                f.into_volumeid32()
-            }
-        }
-
-        impl AsRef<VolumeId32> for $T {
-            #[inline]
-            fn as_ref(&self) -> &VolumeId32 {
-                &self.0
-            }
-        }
-
-        impl Borrow<VolumeId32> for $T {
-            #[inline]
-            fn borrow(&self) -> &VolumeId32 {
-                &self.0
-            }
-        }
-    };
-    ($T:ident<$a:lifetime>) => {
-        impl<$a> From<&$a VolumeId32> for $T<$a> {
-            #[inline]
-            fn from(f: &$a VolumeId32) -> Self {
-                $T::from_volumeid32_ref(f)
-            }
-        }
-
-        impl<$a> From<$T<$a>> for &$a VolumeId32 {
-            #[inline]
-            fn from(f: $T<$a>) -> &$a VolumeId32 {
-                f.0
-            }
-        }
-
-        impl<$a> AsRef<VolumeId32> for $T<$a> {
-            #[inline]
-            fn as_ref(&self) -> &VolumeId32 {
-                self.0
-            }
-        }
-
-        impl<$a> Borrow<VolumeId32> for $T<$a> {
-            #[inline]
-            fn borrow(&self) -> &VolumeId32 {
-                self.0
-            }
-        }
-    };
+impl fmt::LowerHex for &SimpleId32 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.encode_lower(&mut [0; SimpleId32::LENGTH]))
+    }
 }
 
-impl_fmt_traits! {
-    SimpleId32<>,
-    HyphenatedId32<>
+impl fmt::UpperHex for &SimpleId32 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.encode_upper(&mut [0; SimpleId32::LENGTH]))
+    }
+}
+
+impl From<VolumeId32> for SimpleId32 {
+    #[inline]
+    fn from(v: VolumeId32) -> Self {
+        SimpleId32(v)
+    }
+}
+
+impl From<SimpleId32> for VolumeId32 {
+    #[inline]
+    fn from(v: SimpleId32) -> Self {
+        v.0
+    }
+}
+
+impl AsRef<VolumeId32> for SimpleId32 {
+    #[inline]
+    fn as_ref(&self) -> &VolumeId32 {
+        &self.0
+    }
+}
+
+impl Borrow<VolumeId32> for SimpleId32 {
+    #[inline]
+    fn borrow(&self) -> &VolumeId32 {
+        &self.0
+    }
+}
+
+impl fmt::Display for &HyphenatedId32 {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::LowerHex::fmt(self, f)
+    }
+}
+
+impl fmt::LowerHex for &HyphenatedId32 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.encode_lower(&mut [0; HyphenatedId32::LENGTH]))
+    }
+}
+
+impl fmt::UpperHex for &HyphenatedId32 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.encode_upper(&mut [0; HyphenatedId32::LENGTH]))
+    }
+}
+
+impl From<VolumeId32> for HyphenatedId32 {
+    #[inline]
+    fn from(v: VolumeId32) -> Self {
+        HyphenatedId32(v)
+    }
+}
+
+impl From<HyphenatedId32> for VolumeId32 {
+    #[inline]
+    fn from(v: HyphenatedId32) -> Self {
+        v.0
+    }
+}
+
+impl AsRef<VolumeId32> for HyphenatedId32 {
+    #[inline]
+    fn as_ref(&self) -> &VolumeId32 {
+        &self.0
+    }
+}
+
+impl Borrow<VolumeId32> for HyphenatedId32 {
+    #[inline]
+    fn borrow(&self) -> &VolumeId32 {
+        &self.0
+    }
+}
+
+impl<'a> From<&'a VolumeId32> for &'a HyphenatedId32 {
+    #[inline]
+    fn from(v: &'a VolumeId32) -> Self {
+        v.as_hyphenated()
+    }
+}
+
+impl<'a> From<&'a HyphenatedId32> for &'a VolumeId32 {
+    #[inline]
+    fn from(v: &'a HyphenatedId32) -> Self {
+        &v.0
+    }
 }
