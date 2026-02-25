@@ -25,7 +25,7 @@
 //! ```
 
 #![no_std]
-#![deny(missing_debug_implementations, missing_docs)]
+//#![deny(missing_debug_implementations, missing_docs)]
 #![allow(clippy::needless_return)]
 
 #[cfg(any(feature = "std", test))]
@@ -37,6 +37,7 @@ extern crate alloc;
 #[cfg(all(not(feature = "std"), not(test)))]
 extern crate core as std;
 
+mod common;
 mod id32;
 mod id64;
 

@@ -9,7 +9,7 @@ license = "Apache-2.0 OR MIT"
 zerocopy = { version = "0.8.33", default-features = false, features = ["derive"], optional = true}
 
 [features]
-default = ["id32", "id64", "std"]
+default = ["id32", "id64", "std", "alloc"]
 std = ["zerocopy/std", "alloc"]
 alloc = []
 zerocopy = ["dep:zerocopy"]
