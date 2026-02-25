@@ -11,6 +11,7 @@
 // except according to those terms.
 
 use crate::{
+    common::{HEX_TABLE, SHL4_TABLE},
     id32::{
         VolumeId32,
         error::{Error, ErrorKind, InvalidVolumeId32},
@@ -193,41 +194,6 @@ pub(crate) const fn parse_hyphenatedid32(s: &'_ [u8]) -> Result<[u8; 4], Invalid
 
     Ok(buf)
 }
-
-const HEX_TABLE: &[u8; 256] = &{
-    let mut buf = [0; 256];
-    let mut i: u8 = 0;
-
-    loop {
-        buf[i as usize] = match i {
-            b'0'..=b'9' => i - b'0',
-            b'a'..=b'f' => i - b'a' + 10,
-            b'A'..=b'F' => i - b'A' + 10,
-            _ => 0xff,
-        };
-
-        if i == 255 {
-            break buf;
-        }
-
-        i += 1
-    }
-};
-
-const SHL4_TABLE: &[u8; 256] = &{
-    let mut buf = [0; 256];
-    let mut i: u8 = 0;
-
-    loop {
-        buf[i as usize] = i.wrapping_shl(4);
-
-        if i == 255 {
-            break buf;
-        }
-
-        i += 1;
-    }
-};
 
 #[cfg(test)]
 mod tests {

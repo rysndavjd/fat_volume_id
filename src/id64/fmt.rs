@@ -33,8 +33,8 @@ impl fmt::Display for VolumeId64 {
 
 #[cfg(feature = "alloc")]
 impl From<VolumeId64> for String {
-    fn from(volumeid32: VolumeId64) -> Self {
-        volumeid32.to_string()
+    fn from(volumeid64: VolumeId64) -> Self {
+        volumeid64.to_string()
     }
 }
 
@@ -187,5 +187,68 @@ impl SimpleId64 {
     /// ```
     pub const fn into_volumeid64(self) -> VolumeId64 {
         self.0
+    }
+}
+
+impl fmt::Display for SimpleId64 {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::LowerHex::fmt(&self, f)
+    }
+}
+
+impl fmt::LowerHex for SimpleId64 {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.encode_lower(&mut [0; Self::LENGTH]))
+    }
+}
+
+impl fmt::UpperHex for SimpleId64 {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.encode_upper(&mut [0; Self::LENGTH]))
+    }
+}
+
+impl From<VolumeId64> for SimpleId64 {
+    #[inline]
+    fn from(f: VolumeId64) -> Self {
+        SimpleId64(f)
+    }
+}
+
+impl From<SimpleId64> for VolumeId64 {
+    #[inline]
+    fn from(f: SimpleId64) -> Self {
+        f.into_volumeid64()
+    }
+}
+
+impl AsRef<VolumeId64> for SimpleId64 {
+    #[inline]
+    fn as_ref(&self) -> &VolumeId64 {
+        &self.0
+    }
+}
+
+impl Borrow<VolumeId64> for SimpleId64 {
+    #[inline]
+    fn borrow(&self) -> &VolumeId64 {
+        &self.0
+    }
+}
+
+impl<'a> From<&'a VolumeId64> for SimpleId64 {
+    #[inline]
+    fn from(f: &'a VolumeId64) -> Self {
+        f.simple()
+    }
+}
+
+impl<'a> From<&'a SimpleId64> for VolumeId64 {
+    #[inline]
+    fn from(f: &'a SimpleId64) -> Self {
+        f.0
     }
 }

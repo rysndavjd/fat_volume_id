@@ -2,8 +2,6 @@ mod error;
 pub mod fmt;
 mod parser;
 
-use std::string::ToString;
-
 use crate::id32::error::{Error, ErrorKind};
 
 /// 32-bit Volume ID used in FAT12/16/32 and exFAT filesystems.
