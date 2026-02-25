@@ -19,7 +19,13 @@ path = ".."
 members = ["."]
 
 [[bin]]
-name = "fuzz_target_parse"
-path = "fuzz_targets/fuzz_target_parse.rs"
+name = "fuzz_target_parseid64"
+path = "fuzz_targets/fuzz_target_parseid64.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_target_parseid32"
+path = "fuzz_targets/fuzz_target_parseid32.rs"
 test = false
 doc = false
