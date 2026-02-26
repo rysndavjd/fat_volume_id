@@ -101,6 +101,9 @@ const fn format_simpleid64(src: &[u8; 8], upper: bool) -> [u8; SimpleId64::LENGT
 }
 
 impl SimpleId64 {
+        /// The length of a simple [`VolumeId64`] string.
+    ///
+    /// [`VolumeId64`]: ../struct.VolumeId64.html
     pub const LENGTH: usize = 16;
 
     /// Creates a [`SimpleId64`] from a [`VolumeId64`].
