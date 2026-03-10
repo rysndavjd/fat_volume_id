@@ -37,6 +37,9 @@ extern crate alloc;
 #[cfg(all(not(feature = "std"), not(test)))]
 extern crate core as std;
 
+#[cfg(not(any(feature = "id32", feature = "id64")))]
+compile_error!("At least one of the features `id32` or `id64` must be enabled.");
+
 mod common;
 mod id32;
 mod id64;
