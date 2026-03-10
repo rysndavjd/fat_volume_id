@@ -34,6 +34,10 @@ use crate::id32::error::{Error, ErrorKind};
         zerocopy::Unaligned
     )
 )]
+#[cfg_attr(
+    feature = "borsh",
+    derive(borsh_derive::BorshDeserialize, borsh_derive::BorshSerialize)
+)]
 pub struct VolumeId32([u8; 4]);
 
 impl VolumeId32 {

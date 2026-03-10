@@ -6,12 +6,17 @@ description = "A library to generate and parse Volume Identifiers in FAT12/16/32
 license = "Apache-2.0 OR MIT"
 
 [dependencies]
-zerocopy = { version = "0.8.33", default-features = false, features = ["derive"], optional = true}
+borsh = { version = "1.6.0", default-features = false, optional = true }
+borsh-derive = { version = "1.6.0", default-features = false, optional = true }
+zerocopy = { version = "0.8.33", default-features = false, features = [
+    "derive",
+], optional = true }
 
 [features]
-default = ["id32", "id64", "std", "alloc"]
-std = ["zerocopy/std", "alloc"]
+default = ["id32", "id64", "std"]
+std = ["borsh/std", "zerocopy/std", "alloc"]
 alloc = []
 zerocopy = ["dep:zerocopy"]
+borsh = ["dep:borsh", "dep:borsh-derive"]
 id32 = []
 id64 = []
