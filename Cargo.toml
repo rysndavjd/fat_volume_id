@@ -1,7 +1,11 @@
 [package]
+authors = ["rysndavjd"]
+categories = ["data-structures", "no-std", "parser-implementations"]
 name = "fat_volume_id"
+readme = "README.md"
 version = "0.1.0"
 edition = "2024"
+include = ["src", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "A library to generate and parse Volume Identifiers in FAT12/16/32, exFAT and NTFS."
 license = "Apache-2.0 OR MIT"
 

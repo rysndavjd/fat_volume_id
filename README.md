@@ -1,5 +1,7 @@
 # `fat_volume_id`
 
+[![Latest Version](https://img.shields.io/crates/v/fat_volume_id.svg)](https://crates.io/crates/fat_volume_id)
+
 Example of different volume ID/serial numbers:
 
 32bit Volume ID
