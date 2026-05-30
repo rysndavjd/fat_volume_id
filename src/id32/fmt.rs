@@ -13,7 +13,7 @@
 use crate::{
     common::{LOWER, UPPER},
     id32::VolumeId32,
-    std::{borrow::Borrow, fmt, hash::Hash, mem::transmute},
+    std::{borrow::Borrow, fmt, mem::transmute},
 };
 
 #[cfg(feature = "alloc")]
@@ -308,7 +308,7 @@ impl HyphenatedId32 {
     fn _encode<'b>(src: &[u8; 4], buffer: &'b mut [u8], upper: bool) -> &'b mut str {
         assert!(
             buffer.len() >= Self::LENGTH,
-            "Buffer too small to encode a SimpleId32"
+            "Buffer too small to encode a HyphenatedId32"
         );
 
         let buf: &mut [u8; Self::LENGTH] = (&mut buffer[..Self::LENGTH]).try_into().unwrap();

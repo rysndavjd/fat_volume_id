@@ -53,11 +53,11 @@ impl<'a> InvalidVolumeId32<'a> {
         };
 
         let mut hyphen_count = 0;
-        let mut group_bounds = [0; 4];
+        let mut group_bounds = 0;
 
         for (index, character) in input_str.char_indices() {
             let byte = character as u8;
-            if character as u32 - byte as u32 > 0 {
+            if !character.is_ascii() {
                 // Multibyte char
                 return Error(ErrorKind::ParseChar {
                     character,
@@ -66,7 +66,7 @@ impl<'a> InvalidVolumeId32<'a> {
             } else if byte == b'-' {
                 // While we search, also count group breaks
                 if hyphen_count < 1 {
-                    group_bounds[hyphen_count] = index;
+                    group_bounds = index;
                 }
                 hyphen_count += 1;
             } else if !byte.is_ascii_hexdigit() {
@@ -94,17 +94,15 @@ impl<'a> InvalidVolumeId32<'a> {
         } else {
             // There are 2 groups, one of them has an incorrect length
             const BLOCK_STARTS: [usize; 2] = [0, 5];
-            for i in 0..1 {
-                if group_bounds[i] != BLOCK_STARTS[i + 1] - 1 {
-                    return Error(ErrorKind::ParseGroupLength {
-                        group: i,
-                        len: group_bounds[i] - BLOCK_STARTS[i],
-                        index: BLOCK_STARTS[i] + 1,
-                    });
-                }
+            if group_bounds != BLOCK_STARTS[1] - 1 {
+                return Error(ErrorKind::ParseGroupLength {
+                    group: 0,
+                    len: group_bounds,
+                    index: BLOCK_STARTS[0] + 1,
+                });
             }
 
-            // // The last group must be too short/long
+            // The last group must be too short/long
             Error(ErrorKind::ParseGroupLength {
                 group: 1,
                 len: input_str.len() - BLOCK_STARTS[1],
@@ -122,7 +120,7 @@ impl fmt::Display for Error {
             } => {
                 write!(
                     f,
-                    "invalid character: expected [0-9a-fA-F-], found `{}` at {}",
+                    "invalid character: expected [0-9a-fA-F], found `{}` at {}",
                     character, index
                 )
             }
@@ -140,7 +138,7 @@ impl fmt::Display for Error {
                 write!(f, "invalid group count: expected 2, found {}", count)
             }
             ErrorKind::ParseGroupLength { group, len, .. } => {
-                let expected = [8, 4, 4, 4, 12][group];
+                let expected = [4, 4][group];
                 write!(
                     f,
                     "invalid group length in group {}: expected {}, found {}",

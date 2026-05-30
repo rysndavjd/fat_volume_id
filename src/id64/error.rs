@@ -42,7 +42,7 @@ impl<'a> InvalidVolumeId64<'a> {
 
         for (index, character) in input_str.char_indices() {
             let byte = character as u8;
-            if character as u32 - byte as u32 > 0 {
+            if !character.is_ascii() {
                 // Multibyte char
                 return Error(ErrorKind::ParseChar {
                     character,
@@ -74,7 +74,7 @@ impl fmt::Display for Error {
             } => {
                 write!(
                     f,
-                    "invalid character: expected [0-9a-fA-F-], found `{}` at {}",
+                    "invalid character: expected [0-9a-fA-F], found `{}` at {}",
                     character, index
                 )
             }

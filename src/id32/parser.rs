@@ -1,6 +1,6 @@
 // Copyright 2013-2014 The Rust Project Developers.
 // Copyright 2018 The Uuid Project Developers.
-// Copyright 2025 rysndavjd.
+// Copyright 2025-2026 rysndavjd.
 //
 // See the COPYRIGHT file at the top-level directory of this distribution.
 //
@@ -47,7 +47,7 @@ impl TryFrom<crate::alloc::string::String> for VolumeId32 {
 
 impl VolumeId32 {
     /// Parses a [`VolumeId32`] from a string slice of hexadecimal digits.
-    /// Automatically gets additional infomation of errors if any are returned
+    /// Automatically gets additional information of errors if any are returned
     /// using `InvalidVolumeId32::into_err`.
     ///
     /// To parse a [`VolumeId32`] from a byte stream instead of a UTF8 string, see
@@ -67,7 +67,7 @@ impl VolumeId32 {
     }
 
     /// Parses a [`VolumeId32`] from a string slice of hexadecimal digits.
-    /// Without getting additional infomation on errors instead returning
+    /// Without getting additional information on errors instead returning
     /// `InvalidVolumeId32`.
     ///
     /// To parse a [`VolumeId32`] from a byte stream instead of a UTF8 string, see
@@ -134,7 +134,7 @@ pub(crate) const fn parse_simpleid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolu
 
         // We use `0xff` as a sentinel value to indicate
         // an invalid hex character sequence (like the letter `G`)
-        if h1 | h2 == 0xff {
+        if (h1 | h2) == 0xff {
             return Err(InvalidVolumeId32(s));
         }
 
@@ -183,7 +183,7 @@ pub(crate) const fn parse_hyphenatedid32(s: &'_ [u8]) -> Result<[u8; 4], Invalid
         let h3 = HEX_TABLE[s[(i + 2) as usize] as usize];
         let h4 = HEX_TABLE[s[(i + 3) as usize] as usize];
 
-        if h1 | h2 | h3 | h4 == 0xff {
+        if (h1 | h2 | h3 | h4) == 0xff {
             return Err(InvalidVolumeId32(s));
         }
 

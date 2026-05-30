@@ -24,7 +24,7 @@ pub struct VolumeId64([u8; 8]);
 
 impl VolumeId64 {
     /// A VolumeId64 with all zeros.
-    // Basic usage:
+    /// Basic usage:
     ///
     /// ```
     /// # use fat_volume_id::VolumeId64;
@@ -40,7 +40,7 @@ impl VolumeId64 {
     }
 
     /// A VolumeId64 with all ones.
-    // Basic usage:
+    /// Basic usage:
     ///
     /// ```
     /// # use fat_volume_id::VolumeId64;
@@ -395,6 +395,14 @@ impl AsRef<[u8]> for VolumeId64 {
     }
 }
 
+impl TryFrom<&[u8]> for VolumeId64 {
+    type Error = Error;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        VolumeId64::from_slice(value)
+    }
+}
+
 #[cfg(feature = "alloc")]
 impl From<VolumeId64> for alloc::vec::Vec<u8> {
     fn from(value: VolumeId64) -> Self {
@@ -408,5 +416,11 @@ impl TryFrom<alloc::vec::Vec<u8>> for VolumeId64 {
 
     fn try_from(value: alloc::vec::Vec<u8>) -> Result<Self, Self::Error> {
         VolumeId64::from_slice(&value)
+    }
+}
+
+impl Default for VolumeId64 {
+    fn default() -> Self {
+        Self::nil()
     }
 }

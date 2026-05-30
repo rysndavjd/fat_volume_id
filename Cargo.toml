@@ -10,9 +10,9 @@ description = "A library to generate and parse Volume Identifiers in FAT12/16/32
 license = "Apache-2.0 OR MIT"
 
 [dependencies]
-borsh = { version = "1.6.0", default-features = false, optional = true }
-borsh-derive = { version = "1.6.0", default-features = false, optional = true }
-zerocopy = { version = "0.8.33", default-features = false, features = [
+borsh = { version = "1.6.1", default-features = false, optional = true }
+borsh-derive = { version = "1.6.1", default-features = false, optional = true }
+zerocopy = { version = "0.8.50", default-features = false, features = [
     "derive",
 ], optional = true }
 

@@ -1,6 +1,6 @@
 // Copyright 2013-2014 The Rust Project Developers.
 // Copyright 2018 The Uuid Project Developers.
-// Copyright 2025 rysndavjd.
+// Copyright 2025-2026 rysndavjd.
 //
 // See the COPYRIGHT file at the top-level directory of this distribution.
 //

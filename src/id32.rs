@@ -42,7 +42,7 @@ pub struct VolumeId32([u8; 4]);
 
 impl VolumeId32 {
     /// A VolumeId32 with all zeros.
-    // Basic usage:
+    /// Basic usage:
     ///
     /// ```
     /// # use fat_volume_id::VolumeId32;
@@ -58,7 +58,7 @@ impl VolumeId32 {
     }
 
     /// A VolumeId32 with all ones.
-    // Basic usage:
+    /// Basic usage:
     ///
     /// ```
     /// # use fat_volume_id::VolumeId32;
@@ -268,7 +268,7 @@ impl VolumeId32 {
     ///     0xa1a2a3a4,
     /// );
     /// ```
-    pub const fn as_u32_be(self) -> u32 {
+    pub const fn as_u32_be(&self) -> u32 {
         u32::from_be_bytes(*self.as_bytes())
     }
 
@@ -290,8 +290,8 @@ impl VolumeId32 {
     ///     volumeid32.hyphenated().to_string(),
     /// );
     /// ```
-    pub fn from_u16_pair(high_bits: u16, low_bits: u16) -> Self {
-        VolumeId32::from_u32(((high_bits as u32) << 16) | low_bits as u32)
+    pub fn from_u16_pair(hi: u16, lo: u16) -> Self {
+        VolumeId32::from_u32(((hi as u32) << 16) | lo as u32)
     }
 
     /// Creates a VolumeId32 from two 16bit values in big endian order.
@@ -312,8 +312,8 @@ impl VolumeId32 {
     ///     volumeid32.hyphenated().to_string(),
     /// );
     /// ```
-    pub fn from_u16_pair_be(high_bits: u16, low_bits: u16) -> Self {
-        VolumeId32::from_u32_be(((high_bits as u32) << 16) | low_bits as u32)
+    pub fn from_u16_pair_be(hi: u16, lo: u16) -> Self {
+        VolumeId32::from_u32_be(((hi as u32) << 16) | lo as u32)
     }
 
     /// Returns an array of bytes.
@@ -411,6 +411,14 @@ impl AsRef<[u8]> for VolumeId32 {
     }
 }
 
+impl TryFrom<&[u8]> for VolumeId32 {
+    type Error = Error;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        VolumeId32::from_slice(value)
+    }
+}
+
 #[cfg(feature = "alloc")]
 impl From<VolumeId32> for crate::alloc::vec::Vec<u8> {
     fn from(value: VolumeId32) -> Self {
@@ -424,5 +432,11 @@ impl TryFrom<crate::alloc::vec::Vec<u8>> for VolumeId32 {
 
     fn try_from(value: crate::alloc::vec::Vec<u8>) -> Result<Self, Self::Error> {
         VolumeId32::from_slice(&value)
+    }
+}
+
+impl Default for VolumeId32 {
+    fn default() -> Self {
+        Self::nil()
     }
 }
