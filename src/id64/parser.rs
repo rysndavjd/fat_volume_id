@@ -55,7 +55,7 @@ impl VolumeId64 {
     ///
     /// # Examples
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let volumeid64 = VolumeId64::parse("49aa648a49aa648a")
     ///     .expect("Failed Parsing String");
     ///
@@ -75,7 +75,7 @@ impl VolumeId64 {
     ///
     /// # Examples
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let volumeid64 = VolumeId64::try_parse("49aa648a49aa648a")
     ///     .expect("Failed Parsing String");
     ///
@@ -94,7 +94,7 @@ impl VolumeId64 {
     ///
     /// # Examples
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let volumeid64 = VolumeId64::try_parse_ascii(b"49aa648a49aa648a")
     ///     .expect("Failed Parsing String");
     ///

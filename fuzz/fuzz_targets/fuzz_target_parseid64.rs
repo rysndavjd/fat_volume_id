@@ -1,7 +1,7 @@
 #![no_main]
 use libfuzzer_sys::fuzz_target;
 
-use fat_volume_id::VolumeId64;
+use fat_volume_id::id64::VolumeId64;
 use std::str;
 
 fuzz_target!(|data: &[u8]| {

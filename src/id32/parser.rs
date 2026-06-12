@@ -14,7 +14,7 @@ use crate::{
     common::{HEX_TABLE, SHL4_TABLE},
     id32::{
         VolumeId32,
-        error::{Error, ErrorKind, InvalidVolumeId32},
+        error::{Error, InvalidVolumeId32},
         fmt::{HyphenatedId32, SimpleId32},
     },
     std::str::FromStr,
@@ -24,7 +24,7 @@ impl FromStr for VolumeId32 {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::try_parse(s).map_err(|_| Error(ErrorKind::ParseOther))
+        Self::try_parse(s).map_err(|invaild| invaild.into_err())
     }
 }
 
@@ -32,7 +32,7 @@ impl TryFrom<&'_ str> for VolumeId32 {
     type Error = Error;
 
     fn try_from(s: &'_ str) -> Result<Self, Self::Error> {
-        Self::try_parse(s).map_err(|_| Error(ErrorKind::ParseOther))
+        Self::try_parse(s).map_err(|invaild| invaild.into_err())
     }
 }
 
@@ -41,7 +41,7 @@ impl TryFrom<crate::alloc::string::String> for VolumeId32 {
     type Error = Error;
 
     fn try_from(s: crate::alloc::string::String) -> Result<Self, Self::Error> {
-        Self::try_parse(s.as_ref()).map_err(|_| Error(ErrorKind::ParseOther))
+        Self::try_parse(s.as_ref()).map_err(|invaild| invaild.into_err())
     }
 }
 
@@ -55,7 +55,7 @@ impl VolumeId32 {
     ///
     /// # Examples
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let volumeid32 = VolumeId32::parse("49aa648a")
     ///     .expect("Failed Parsing String");
     ///
@@ -75,7 +75,7 @@ impl VolumeId32 {
     ///
     /// # Examples
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let volumeid32 = VolumeId32::try_parse("49aa648a")
     ///     .expect("Failed Parsing String");
     ///
@@ -94,7 +94,7 @@ impl VolumeId32 {
     ///
     /// # Examples
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let volumeid32 = VolumeId32::try_parse_ascii(b"49aa648a")
     ///     .expect("Failed Parsing String");
     ///

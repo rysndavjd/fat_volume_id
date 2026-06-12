@@ -1,27 +1,34 @@
 mod error;
 pub mod fmt;
 mod parser;
+#[cfg(feature = "serde")]
+pub mod serde;
 
-use crate::id32::error::{Error, ErrorKind};
+pub use crate::id32::error::Error;
+use crate::id32::error::ErrorKind;
 
 /// 32-bit Volume ID used in FAT12/16/32 and exFAT filesystems.
 ///
 /// # Endianness
 ///
-/// Microsoft’s FAT specification defines the FAT header as little-endian,
-/// which means the volume serial number is stored in little-endian byte order.
-/// This crate assumes integer inputs are already in the correct order by default,
-/// regardless of the endianness of the environment. Most methods that accept integers
-/// have a `_be` variant that assumes any integer values will need to have their bytes
-/// flipped, regardless of the endianness of the environment.
+/// FAT volume serial numbers are stored in little-endian byteorder.
+/// Internally, [`VolumeId32`] stores the four bytes exactly as they appear
+/// in the filesystem header.
 ///
-/// Most users won't need to worry about endianness unless they are changing endianness
-/// of Volume ID when parsing a FAT header. The important things to remember are:
+/// Methods that accept or return integers assume little-endian ordering
+/// by default. Corresponding `_be` methods interpret integer values as
+/// big-endian and perform the necessary byteorder conversion.
 ///
-/// - The endianness is in terms of the integer of the VolumeId32.
-/// - Byte-flipping in `_be` methods applies to the integer.
-/// - Endianness roundtrips, so if you create a VolumeId32 with `from_bytes_be`
-///   you'll get the same values back out with `as_bytes_be`.
+/// Most users do not need to think about endianness. It only matters when
+/// converting between the FAT on disk representation and integer values in
+/// a specific byteorder.
+///
+/// Key points:
+///
+/// - Endianness refers to the integer representation, not the stored bytes.
+/// - `_be` methods perform byteorder conversion on integer values.
+/// - Conversions are symmetric: values created with `from_*_be` can be
+///   reversed with the corresponding `as_*_be` methods.
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]
 #[cfg_attr(
@@ -45,7 +52,7 @@ impl VolumeId32 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let volumeid32 = VolumeId32::nil();
     ///
     /// assert_eq!(
@@ -61,7 +68,7 @@ impl VolumeId32 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let volumeid32 = VolumeId32::max();
     ///
     /// assert_eq!(
@@ -80,7 +87,7 @@ impl VolumeId32 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// # use std::string::ToString;
     /// let bytes = [0xa1, 0xa2, 0xa3, 0xa4];
     ///
@@ -100,7 +107,7 @@ impl VolumeId32 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// # use std::string::ToString;
     /// let bytes = [0xa1, 0xa2, 0xa3, 0xa4];
     ///
@@ -124,7 +131,7 @@ impl VolumeId32 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let bytes = [
     ///     0xa1, 0xa2, 0xa3, 0xa4,
     /// ];
@@ -159,7 +166,7 @@ impl VolumeId32 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let bytes = [
     ///     0xa1, 0xa2, 0xa3, 0xa4,
     /// ];
@@ -190,7 +197,7 @@ impl VolumeId32 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let v = 0xa1a2a3a4;
     ///
     /// let volumeid32 = VolumeId32::from_u32(v);
@@ -215,7 +222,7 @@ impl VolumeId32 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let v = 0xa1a2a3a4;
     ///
     /// let volumeid32 = VolumeId32::from_u32_be(v);
@@ -236,7 +243,7 @@ impl VolumeId32 {
     /// # Examples
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let volumeid32 = VolumeId32::parse("a1a2a3a4")
     ///     .unwrap();
     ///
@@ -259,7 +266,7 @@ impl VolumeId32 {
     /// # Examples
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let volumeid32 = VolumeId32::parse("a1a2a3a4")
     /// .unwrap();
     ///
@@ -279,7 +286,7 @@ impl VolumeId32 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let hi = 0xa1a2;
     /// let lo = 0xa3a4;
     ///
@@ -301,7 +308,7 @@ impl VolumeId32 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let hi = 0xa1a2;
     /// let lo = 0xa3a4;
     ///
@@ -323,7 +330,7 @@ impl VolumeId32 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     /// let volumeid32 = VolumeId32::from_bytes([0xa1, 0xa2, 0xa3, 0xa4]);
     ///
     /// assert_eq!(
@@ -341,7 +348,7 @@ impl VolumeId32 {
     /// # Examples
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     ///
     /// let volumeid32 = VolumeId32::parse("a1a2-a3a4")
     ///     .unwrap();
@@ -365,7 +372,7 @@ impl VolumeId32 {
     /// # Examples
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId32;
+    /// # use fat_volume_id::id32::VolumeId32;
     ///
     /// let volumeid32 = VolumeId32::parse("a1a2-a3a4")
     ///     .unwrap();

@@ -12,15 +12,23 @@ license = "Apache-2.0 OR MIT"
 [dependencies]
 borsh = { version = "1.6.1", default-features = false, optional = true }
 borsh-derive = { version = "1.6.1", default-features = false, optional = true }
+serde_core = { version = "1.0.228", default-features = false, optional = true }
 zerocopy = { version = "0.8.50", default-features = false, features = [
     "derive",
 ], optional = true }
 
+[dev-dependencies]
+serde = { version = "1.0.221" }
+serde_derive = { version = "1.0.221" }
+serde_json = { version = "1.0" }
+serde_test = { version = "1.0.56" }
+
 [features]
-default = ["id32", "id64", "std"]
-std = ["borsh/std", "zerocopy/std", "alloc"]
-alloc = []
+default = ["id32", "id64", "std", "alloc"]
+std = ["borsh/std", "zerocopy/std"]
+alloc = ["serde_core/alloc", "zerocopy/alloc"]
 zerocopy = ["dep:zerocopy"]
 borsh = ["dep:borsh", "dep:borsh-derive"]
+serde = ["dep:serde_core"]
 id32 = []
 id64 = []

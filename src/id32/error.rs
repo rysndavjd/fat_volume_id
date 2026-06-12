@@ -1,5 +1,6 @@
 use crate::std::{fmt, str::from_utf8};
 
+/// A general error that can occur when working with VolumeId32s.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Error(pub(crate) ErrorKind);
 
@@ -29,8 +30,6 @@ pub(crate) enum ErrorKind {
     },
     /// The input was not a valid UTF8 string
     ParseInvalidUTF8,
-    /// Some other parsing error occurred.
-    ParseOther,
 }
 
 /// A string that is guaranteed to fail to parse to a [`VolumeId32`].
@@ -146,7 +145,6 @@ impl fmt::Display for Error {
                 )
             }
             ErrorKind::ParseInvalidUTF8 => write!(f, "non-UTF8 input"),
-            ErrorKind::ParseOther => write!(f, "failed to parse a VolumeId32"),
         }
     }
 }

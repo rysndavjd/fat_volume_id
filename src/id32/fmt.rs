@@ -10,10 +10,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+//! Adapters for alternative string formats.
+
 use crate::{
     common::{LOWER, UPPER},
-    id32::VolumeId32,
-    std::{borrow::Borrow, fmt, mem::transmute},
+    id32::{Error, VolumeId32},
+    std::{borrow::Borrow, fmt, mem::transmute, str::FromStr},
 };
 
 #[cfg(feature = "alloc")]
@@ -224,7 +226,7 @@ impl SimpleId32 {
     /// # Examples
     ///
     /// ```rust
-    /// use fat_volume_id::VolumeId32;
+    /// use fat_volume_id::id32::VolumeId32;
     ///
     /// let simple = VolumeId32::nil().simple();
     /// assert_eq!(*simple.as_volumeid32(), VolumeId32::nil());
@@ -238,7 +240,7 @@ impl SimpleId32 {
     /// # Examples
     ///
     /// ```rust
-    /// use fat_volume_id::VolumeId32;
+    /// use fat_volume_id::id32::VolumeId32;
     ///
     /// let simple = VolumeId32::nil().simple();
     /// assert_eq!(simple.into_volumeid32(), VolumeId32::nil());
@@ -323,7 +325,7 @@ impl HyphenatedId32 {
     /// # Examples
     ///
     /// ```rust
-    /// use fat_volume_id::VolumeId32;
+    /// use fat_volume_id::id32::VolumeId32;
     ///
     /// let hyphenated = VolumeId32::nil().hyphenated();
     /// assert_eq!(*hyphenated.as_volumeid32(), VolumeId32::nil());
@@ -337,7 +339,7 @@ impl HyphenatedId32 {
     /// # Examples
     ///
     /// ```rust
-    /// use fat_volume_id::VolumeId32;
+    /// use fat_volume_id::id32::VolumeId32;
     ///
     /// let hyphenated = VolumeId32::nil().hyphenated();
     /// assert_eq!(hyphenated.into_volumeid32(), VolumeId32::nil());
@@ -410,6 +412,16 @@ impl<'a> From<&'a SimpleId32> for VolumeId32 {
     }
 }
 
+impl FromStr for SimpleId32 {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        crate::id32::parser::parse_simpleid32(s.as_bytes())
+            .map(|b| SimpleId32(VolumeId32(b)))
+            .map_err(|invalid| invalid.into_err())
+    }
+}
+
 impl fmt::Display for HyphenatedId32 {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -470,5 +482,15 @@ impl<'a> From<&'a HyphenatedId32> for VolumeId32 {
     #[inline]
     fn from(f: &'a HyphenatedId32) -> Self {
         f.0
+    }
+}
+
+impl FromStr for HyphenatedId32 {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        crate::id32::parser::parse_hyphenatedid32(s.as_bytes())
+            .map(|b| HyphenatedId32(VolumeId32(b)))
+            .map_err(|invalid| invalid.into_err())
     }
 }

@@ -1,9 +1,32 @@
 mod error;
 pub mod fmt;
 mod parser;
-use crate::id64::error::{Error, ErrorKind};
+
+pub use crate::id64::error::Error;
+use crate::id64::error::ErrorKind;
 
 /// 64-bit Volume ID used in NTFS filesystems.
+///
+/// # Endianness
+///
+/// NTFS volume serial numbers are stored in little-endian byteorder.
+/// Internally, [`VolumeId64`] stores the eight bytes exactly as they appear
+/// in the filesystem header.
+///
+/// Methods that accept or return integers assume little-endian ordering
+/// by default. Corresponding `_be` methods interpret integer values as
+/// big-endian and perform the necessary byteorder conversion.
+///
+/// Most users do not need to think about endianness. It only matters when
+/// converting between the NTFS on-disk representation and integer values in
+/// a specific byteorder.
+///
+/// Key points:
+///
+/// - Endianness refers to the integer representation, not the stored bytes.
+/// - `_be` methods perform byteorder conversion on integer values.
+/// - Conversions are symmetric: values created with `from_*_be` can be
+///   reversed with the corresponding `as_*_be` methods.
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]
 #[cfg_attr(
@@ -27,7 +50,7 @@ impl VolumeId64 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let volumeid64 = VolumeId64::nil();
     ///
     /// assert_eq!(
@@ -43,7 +66,7 @@ impl VolumeId64 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let volumeid64 = VolumeId64::max();
     ///
     /// assert_eq!(
@@ -62,7 +85,7 @@ impl VolumeId64 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// # use std::string::ToString;
     /// let bytes = [0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8];
     ///
@@ -82,7 +105,7 @@ impl VolumeId64 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// # use std::string::ToString;
     /// let bytes = [0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8];
     ///
@@ -106,7 +129,7 @@ impl VolumeId64 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let bytes = [
     ///     0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8
     /// ];
@@ -141,7 +164,7 @@ impl VolumeId64 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let bytes = [
     ///     0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8
     /// ];
@@ -172,7 +195,7 @@ impl VolumeId64 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let v = 0xa1a2a3a4a5a6a7a8;
     ///
     /// let volumeid64 = VolumeId64::from_u64(v);
@@ -197,7 +220,7 @@ impl VolumeId64 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let v = 0xa1a2a3a4a5a6a7a8;
     ///
     /// let volumeid64 = VolumeId64::from_u64_be(v);
@@ -218,7 +241,7 @@ impl VolumeId64 {
     /// # Examples
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let volumeid64 = VolumeId64::parse("a1a2a3a4a5a6a7a8")
     ///     .unwrap();
     ///
@@ -241,7 +264,7 @@ impl VolumeId64 {
     /// # Examples
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let volumeid64 = VolumeId64::parse("a1a2a3a4a5a6a7a8")
     /// .unwrap();
     ///
@@ -261,7 +284,7 @@ impl VolumeId64 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let hi = 0xa1a2a3a4;
     /// let lo = 0xa5a6a7a8;
     ///
@@ -283,7 +306,7 @@ impl VolumeId64 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let hi = 0xa1a2a3a4;
     /// let lo = 0xa5a6a7a8;
     ///
@@ -305,7 +328,7 @@ impl VolumeId64 {
     /// Basic usage:
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     /// let volumeid64 = VolumeId64::from_bytes([0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8]);
     ///
     /// assert_eq!(
@@ -323,7 +346,7 @@ impl VolumeId64 {
     /// # Examples
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     ///
     /// let volumeid64 = VolumeId64::parse("a1a2a3a4a5a6a7a8")
     ///     .unwrap();
@@ -347,7 +370,7 @@ impl VolumeId64 {
     /// # Examples
     ///
     /// ```
-    /// # use fat_volume_id::VolumeId64;
+    /// # use fat_volume_id::id64::VolumeId64;
     ///
     /// let volumeid64 = VolumeId64::parse("a1a2a3a4a5a6a7a8")
     ///     .unwrap();

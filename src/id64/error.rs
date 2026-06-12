@@ -1,5 +1,6 @@
 use crate::std::{error, fmt, str::from_utf8};
 
+/// A general error that can occur when working with VolumeId64s.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Error(pub(crate) ErrorKind);
 

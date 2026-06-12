@@ -10,6 +10,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+//! Adapters for alternative string formats.
+
 use crate::{
     common::{LOWER, UPPER},
     id64::VolumeId64,
@@ -101,7 +103,7 @@ const fn format_simpleid64(src: &[u8; 8], upper: bool) -> [u8; SimpleId64::LENGT
 }
 
 impl SimpleId64 {
-        /// The length of a simple [`VolumeId64`] string.
+    /// The length of a simple [`VolumeId64`] string.
     ///
     /// [`VolumeId64`]: ../struct.VolumeId64.html
     pub const LENGTH: usize = 16;
@@ -169,7 +171,7 @@ impl SimpleId64 {
     /// # Examples
     ///
     /// ```rust
-    /// use fat_volume_id::VolumeId64;
+    /// use fat_volume_id::id64::VolumeId64;
     ///
     /// let simple = VolumeId64::nil().simple();
     /// assert_eq!(*simple.as_volumeid64(), VolumeId64::nil());
@@ -183,7 +185,7 @@ impl SimpleId64 {
     /// # Examples
     ///
     /// ```rust
-    /// use fat_volume_id::VolumeId64;
+    /// use fat_volume_id::id64::VolumeId64;
     ///
     /// let simple = VolumeId64::nil().simple();
     /// assert_eq!(simple.into_volumeid64(), VolumeId64::nil());

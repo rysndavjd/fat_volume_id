@@ -41,14 +41,10 @@ extern crate core as std;
 compile_error!("At least one of the features `id32` or `id64` must be enabled.");
 
 mod common;
-mod id32;
-mod id64;
 
 #[cfg(feature = "id32")]
-pub use id32::{
-    VolumeId32,
-    fmt::{HyphenatedId32, SimpleId32},
-};
-
+/// 32-bit Volume ID used in FAT12/16/32 and exFAT filesystems.
+pub mod id32;
 #[cfg(feature = "id64")]
-pub use id64::{VolumeId64, fmt::SimpleId64};
+/// 64-bit Volume ID used in NTFS filesystems.
+pub mod id64;
