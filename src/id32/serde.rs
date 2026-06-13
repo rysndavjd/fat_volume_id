@@ -520,7 +520,7 @@ mod serde_tests {
         serde_test::assert_de_tokens(
             &v.readable(),
             &[
-                serde_test::Token::Tuple { len: 16 },
+                serde_test::Token::Tuple { len: 4 },
                 serde_test::Token::U8(bytes[0]),
                 serde_test::Token::U8(bytes[1]),
                 serde_test::Token::U8(bytes[2]),

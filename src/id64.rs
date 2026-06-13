@@ -1,9 +1,11 @@
 mod error;
 pub mod fmt;
 mod parser;
+#[cfg(feature = "serde")]
+pub mod serde;
 
-pub use crate::id64::error::Error;
 use crate::id64::error::ErrorKind;
+pub use crate::id64::error::{Error, InvalidVolumeId64};
 
 /// 64-bit Volume ID used in NTFS filesystems.
 ///

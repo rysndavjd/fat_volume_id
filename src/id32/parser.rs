@@ -48,7 +48,7 @@ impl TryFrom<crate::alloc::string::String> for VolumeId32 {
 impl VolumeId32 {
     /// Parses a [`VolumeId32`] from a string slice of hexadecimal digits.
     /// Automatically gets additional information of errors if any are returned
-    /// using `InvalidVolumeId32::into_err`.
+    /// using [`InvalidVolumeId32::into_err`].
     ///
     /// To parse a [`VolumeId32`] from a byte stream instead of a UTF8 string, see
     /// [`try_parse_ascii`].
@@ -68,7 +68,7 @@ impl VolumeId32 {
 
     /// Parses a [`VolumeId32`] from a string slice of hexadecimal digits.
     /// Without getting additional information on errors instead returning
-    /// `InvalidVolumeId32`.
+    /// [`InvalidVolumeId32`].
     ///
     /// To parse a [`VolumeId32`] from a byte stream instead of a UTF8 string, see
     /// [`try_parse_ascii`].

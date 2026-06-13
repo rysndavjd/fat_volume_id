@@ -14,7 +14,7 @@ use crate::{
     common::{HEX_TABLE, SHL4_TABLE},
     id64::{
         VolumeId64,
-        error::{Error, ErrorKind, InvalidVolumeId64},
+        error::{Error, InvalidVolumeId64},
         fmt::SimpleId64,
     },
     std::str::FromStr,
@@ -24,7 +24,7 @@ impl FromStr for VolumeId64 {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::try_parse(s).map_err(|_| Error(ErrorKind::ParseOther))
+        Self::try_parse(s).map_err(|invaild| invaild.into_err())
     }
 }
 
@@ -32,7 +32,7 @@ impl TryFrom<&'_ str> for VolumeId64 {
     type Error = Error;
 
     fn try_from(s: &'_ str) -> Result<Self, Self::Error> {
-        Self::try_parse(s).map_err(|_| Error(ErrorKind::ParseOther))
+        Self::try_parse(s).map_err(|invaild| invaild.into_err())
     }
 }
 
@@ -41,14 +41,14 @@ impl TryFrom<crate::alloc::string::String> for VolumeId64 {
     type Error = Error;
 
     fn try_from(s: crate::alloc::string::String) -> Result<Self, Self::Error> {
-        Self::try_parse(s.as_ref()).map_err(|_| Error(ErrorKind::ParseOther))
+        Self::try_parse(s.as_ref()).map_err(|invaild| invaild.into_err())
     }
 }
 
 impl VolumeId64 {
     /// Parses a [`VolumeId64`] from a string slice of hexadecimal digits.
     /// Automatically gets additional infomation of errors if any are returned
-    /// using `InvalidVolumeId64::into_err`.
+    /// using [`InvalidVolumeId64::into_err`].
     ///
     /// To parse a [`VolumeId64`] from a byte stream instead of a UTF8 string, see
     /// [`try_parse_ascii`].
@@ -68,7 +68,7 @@ impl VolumeId64 {
 
     /// Parses a [`VolumeId64`] from a string slice of hexadecimal digits.
     /// Without getting additional infomation on errors instead returning
-    /// `InvalidVolumeId64`.
+    /// [`InvalidVolumeId64`].
     ///
     /// To parse a [`VolumeId64`] from a byte stream instead of a UTF8 string, see
     /// [`try_parse_ascii`].

@@ -14,8 +14,8 @@
 
 use crate::{
     common::{LOWER, UPPER},
-    id64::VolumeId64,
-    std::{borrow::Borrow, fmt, hash::Hash, mem::transmute},
+    id64::{VolumeId64, error::Error},
+    std::{borrow::Borrow, fmt, hash::Hash, mem::transmute, str::FromStr},
 };
 
 #[cfg(feature = "alloc")]
@@ -255,5 +255,15 @@ impl<'a> From<&'a SimpleId64> for VolumeId64 {
     #[inline]
     fn from(f: &'a SimpleId64) -> Self {
         f.0
+    }
+}
+
+impl FromStr for SimpleId64 {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        crate::id64::parser::parse_simpleid64(s.as_bytes())
+            .map(|b| SimpleId64(VolumeId64(b)))
+            .map_err(|invalid| invalid.into_err())
     }
 }

@@ -4,8 +4,8 @@ mod parser;
 #[cfg(feature = "serde")]
 pub mod serde;
 
-pub use crate::id32::error::Error;
 use crate::id32::error::ErrorKind;
+pub use crate::id32::error::{Error, InvalidVolumeId32};
 
 /// 32-bit Volume ID used in FAT12/16/32 and exFAT filesystems.
 ///

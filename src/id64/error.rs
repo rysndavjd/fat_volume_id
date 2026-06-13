@@ -18,8 +18,6 @@ pub(crate) enum ErrorKind {
     ParseByteLength { len: usize },
     /// The input was not a valid UTF8 string
     ParseInvalidUTF8,
-    /// Some other parsing error occurred.
-    ParseOther,
 }
 
 /// A string that is guaranteed to fail to parse to a [`VolumeId64`].
@@ -90,7 +88,6 @@ impl fmt::Display for Error {
                 write!(f, "invalid byte length, found {}", len)
             }
             ErrorKind::ParseInvalidUTF8 => write!(f, "non-UTF8 input"),
-            ErrorKind::ParseOther => write!(f, "failed to parse a VolumeId64"),
         }
     }
 }
