@@ -24,7 +24,7 @@ pub(crate) enum ErrorKind {
 ///
 /// This type acts as a lightweight error indicator, suggesting
 /// that the string cannot be parsed but offering no error
-/// details. To get details, use `InvalidVolumeId64::into_err`.
+/// details. To get details, use [`InvalidVolumeId64::into_err`].
 ///
 /// [`VolumeId64`]: ../struct.VolumeId64.html
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]

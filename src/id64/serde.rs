@@ -89,7 +89,7 @@ impl<'vi, T: DeserializeId64> de::Visitor<'vi> for BytesVisitor<T> {
     type Value = T;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "a 4 byte array")
+        write!(formatter, "a 8 byte array")
     }
 
     fn visit_bytes<E: de::Error>(self, value: &[u8]) -> Result<T, E> {
