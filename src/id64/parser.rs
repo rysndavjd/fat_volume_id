@@ -167,7 +167,7 @@ mod tests {
             VolumeId64::parse("!"),
             Err(Error(ErrorKind::ParseChar {
                 character: '!',
-                index: 1,
+                index: 0,
             }))
         );
 
@@ -175,7 +175,7 @@ mod tests {
             VolumeId64::parse("QABC123456789ABC"),
             Err(Error(ErrorKind::ParseChar {
                 character: 'Q',
-                index: 1,
+                index: 0,
             }))
         );
 
@@ -183,7 +183,7 @@ mod tests {
             VolumeId64::parse("F9168C5X12345678"),
             Err(Error(ErrorKind::ParseChar {
                 character: 'X',
-                index: 8,
+                index: 7,
             }))
         );
 
@@ -191,7 +191,7 @@ mod tests {
             VolumeId64::parse("{F9168C512345678"),
             Err(Error(ErrorKind::ParseChar {
                 character: '{',
-                index: 1,
+                index: 0,
             }))
         );
 
@@ -209,7 +209,7 @@ mod tests {
             VolumeId64::parse("67e55abg12abcdef"),
             Err(Error(ErrorKind::ParseChar {
                 character: 'g',
-                index: 8,
+                index: 7,
             }))
         );
 
@@ -217,7 +217,7 @@ mod tests {
             VolumeId64::parse("67e5%2fb12345678"),
             Err(Error(ErrorKind::ParseChar {
                 character: '%',
-                index: 5,
+                index: 4,
             }))
         );
 
@@ -235,7 +235,7 @@ mod tests {
             VolumeId64::parse("Abcdef1267e550Xb"),
             Err(Error(ErrorKind::ParseChar {
                 character: 'X',
-                index: 15,
+                index: 14,
             }))
         );
 
@@ -243,7 +243,7 @@ mod tests {
             VolumeId64::parse("\u{bcf3c}"),
             Err(Error(ErrorKind::ParseChar {
                 character: '\u{bcf3c}',
-                index: 1
+                index: 0
             }))
         );
     }

@@ -14,7 +14,7 @@ use crate::{
     common::{HEX_TABLE, SHL4_TABLE},
     id32::{
         VolumeId32,
-        error::{Error, InvalidVolumeId32},
+        error::{Error, InvalidVolumeId32, RequestedVolumeId},
         fmt::{HyphenatedId32, SimpleId32},
     },
     std::str::FromStr,
@@ -111,7 +111,7 @@ impl VolumeId32 {
                 Ok(bytes) => Ok(VolumeId32::from_bytes(bytes)),
                 Err(e) => Err(e),
             },
-            _ => Err(InvalidVolumeId32(s)),
+            _ => Err(InvalidVolumeId32(s, RequestedVolumeId::Any)),
         }
     }
 }
@@ -119,7 +119,7 @@ impl VolumeId32 {
 #[inline]
 pub(crate) const fn parse_simpleid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolumeId32<'_>> {
     if s.len() != SimpleId32::LENGTH {
-        return Err(InvalidVolumeId32(s));
+        return Err(InvalidVolumeId32(s, RequestedVolumeId::Simple));
     }
 
     let mut buf = [0u8; 4];
@@ -135,7 +135,7 @@ pub(crate) const fn parse_simpleid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolu
         // We use `0xff` as a sentinel value to indicate
         // an invalid hex character sequence (like the letter `G`)
         if (h1 | h2) == 0xff {
-            return Err(InvalidVolumeId32(s));
+            return Err(InvalidVolumeId32(s, RequestedVolumeId::Simple));
         }
 
         // The upper nibble needs to be shifted into position
@@ -150,7 +150,7 @@ pub(crate) const fn parse_simpleid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolu
 #[inline]
 pub(crate) const fn parse_hyphenatedid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolumeId32<'_>> {
     if s.len() != HyphenatedId32::LENGTH {
-        return Err(InvalidVolumeId32(s));
+        return Err(InvalidVolumeId32(s, RequestedVolumeId::Hyphenated));
     }
 
     // We look at two hex-encoded values (4 chars) at a time because
@@ -165,7 +165,7 @@ pub(crate) const fn parse_hyphenatedid32(s: &'_ [u8]) -> Result<[u8; 4], Invalid
     // First, ensure the hyphen appear in the right places
     match [s[4]] {
         [b'-'] => {}
-        _ => return Err(InvalidVolumeId32(s)),
+        _ => return Err(InvalidVolumeId32(s, RequestedVolumeId::Hyphenated)),
     }
 
     let positions: [u8; 2] = [0, 5];
@@ -184,7 +184,7 @@ pub(crate) const fn parse_hyphenatedid32(s: &'_ [u8]) -> Result<[u8; 4], Invalid
         let h4 = HEX_TABLE[s[(i + 3) as usize] as usize];
 
         if (h1 | h2 | h3 | h4) == 0xff {
-            return Err(InvalidVolumeId32(s));
+            return Err(InvalidVolumeId32(s, RequestedVolumeId::Hyphenated));
         }
 
         buf[j * 2] = SHL4_TABLE[h1 as usize] | h2;
@@ -228,25 +228,15 @@ mod tests {
             VolumeId32::parse("!"),
             Err(Error(ErrorKind::ParseChar {
                 character: '!',
-                index: 1,
-            }))
-        );
-
-        assert_eq!(
-            VolumeId32::parse("F91-CEB24"),
-            Err(Error(ErrorKind::ParseGroupLength {
-                group: 0,
-                len: 3,
-                index: 1,
+                index: 0,
             }))
         );
 
         assert_eq!(
             VolumeId32::parse("F916-4fa"),
-            Err(Error(ErrorKind::ParseGroupLength {
-                group: 1,
-                len: 3,
-                index: 6,
+            Err(Error(ErrorKind::ParseChar {
+                character: '-',
+                index: 4
             }))
         );
 
@@ -254,7 +244,7 @@ mod tests {
             VolumeId32::parse("QABC-1234"),
             Err(Error(ErrorKind::ParseChar {
                 character: 'Q',
-                index: 1,
+                index: 0,
             }))
         );
 
@@ -267,7 +257,7 @@ mod tests {
             VolumeId32::parse("F9168C5X"),
             Err(Error(ErrorKind::ParseChar {
                 character: 'X',
-                index: 8,
+                index: 7,
             }))
         );
 
@@ -275,7 +265,7 @@ mod tests {
             VolumeId32::parse("{F9168C5"),
             Err(Error(ErrorKind::ParseChar {
                 character: '{',
-                index: 1,
+                index: 0,
             }))
         );
 
@@ -286,14 +276,14 @@ mod tests {
 
         assert_eq!(
             VolumeId32::parse("123456ABC"),
-            Err(Error(ErrorKind::ParseSimpleLength { len: 9 }))
+            Err(Error(ErrorKind::ParseGroupCount { count: 1 }))
         );
 
         assert_eq!(
             VolumeId32::parse("67e55abg"),
             Err(Error(ErrorKind::ParseChar {
                 character: 'g',
-                index: 8,
+                index: 7,
             }))
         );
 
@@ -301,7 +291,7 @@ mod tests {
             VolumeId32::parse("67e5%2fb"),
             Err(Error(ErrorKind::ParseChar {
                 character: '%',
-                index: 5,
+                index: 4,
             }))
         );
 
@@ -319,7 +309,7 @@ mod tests {
             VolumeId32::parse("67e550Xb"),
             Err(Error(ErrorKind::ParseChar {
                 character: 'X',
-                index: 7,
+                index: 6,
             }))
         );
 
@@ -328,7 +318,25 @@ mod tests {
             Err(Error(ErrorKind::ParseGroupLength {
                 group: 0,
                 len: 6,
-                index: 1,
+                index: 0,
+            }))
+        );
+
+        assert_eq!(
+            VolumeId32::parse("F9-16BACE"),
+            Err(Error(ErrorKind::ParseGroupLength {
+                group: 0,
+                len: 2,
+                index: 0,
+            }))
+        );
+
+        assert_eq!(
+            VolumeId32::parse("F916-BACEE"),
+            Err(Error(ErrorKind::ParseGroupLength {
+                group: 1,
+                len: 5,
+                index: 5,
             }))
         );
 
@@ -336,7 +344,7 @@ mod tests {
             VolumeId32::parse("\u{bcf3c}"),
             Err(Error(ErrorKind::ParseChar {
                 character: '\u{bcf3c}',
-                index: 1
+                index: 0
             }))
         );
     }

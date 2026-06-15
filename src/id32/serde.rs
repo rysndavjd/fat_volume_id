@@ -372,7 +372,7 @@ pub mod simple {
                     Token::BorrowedStr(HYPHENATED_STR),
                     Token::TupleStructEnd,
                 ],
-                "VolumeId32 parsing failed: invalid group length in group 1: expected 4, found 4",
+                "VolumeId32 parsing failed: invalid character: expected [0-9a-fA-F], found `-` at 4",
             );
         }
     }
@@ -493,7 +493,7 @@ pub mod hyphenated {
                     Token::BorrowedStr(SIMPLE_STR),
                     Token::TupleStructEnd,
                 ],
-                "VolumeId32 parsing failed: invalid length: expected length for simple format, found 8",
+                "VolumeId32 parsing failed: invalid group count: expected 2, found 1",
             );
         }
     }
@@ -565,7 +565,7 @@ mod serde_tests {
     fn test_de_failure() {
         serde_test::assert_de_tokens_error::<Readable<VolumeId32>>(
             &[Token::Str("hello_world")],
-            "VolumeId32 parsing failed: invalid character: expected [0-9a-fA-F], found `h` at 1",
+            "VolumeId32 parsing failed: invalid character: expected [0-9a-fA-F], found `h` at 0",
         );
 
         serde_test::assert_de_tokens_error::<Compact<VolumeId32>>(

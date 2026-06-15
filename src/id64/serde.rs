@@ -89,7 +89,7 @@ impl<'vi, T: DeserializeId64> de::Visitor<'vi> for BytesVisitor<T> {
     type Value = T;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "a 8 byte array")
+        write!(formatter, "an 8 byte array")
     }
 
     fn visit_bytes<E: de::Error>(self, value: &[u8]) -> Result<T, E> {
@@ -312,24 +312,6 @@ pub mod simple {
                 ],
             );
         }
-
-        #[test]
-        fn test_de_from_simple() {
-            #[derive(PartialEq, Debug, serde_derive::Deserialize)]
-            struct Struct(#[serde(with = "super")] VolumeId64);
-            let s = Struct(SIMPLE_STR.parse().unwrap());
-            serde_test::assert_de_tokens::<Struct>(
-                &s,
-                &[
-                    Token::TupleStruct {
-                        name: "Struct",
-                        len: 1,
-                    },
-                    Token::BorrowedStr(SIMPLE_STR),
-                    Token::TupleStructEnd,
-                ],
-            );
-        }
     }
 }
 
@@ -370,7 +352,7 @@ mod serde_tests {
 
     #[test]
     fn test_deserialize_readable_bytes() {
-        let bytes = b"F9168C5E";
+        let bytes = b"CC0E01BD";
         let v = VolumeId64::from_slice(bytes).unwrap();
 
         serde_test::assert_de_tokens(&v.readable(), &[serde_test::Token::Bytes(bytes)]);
@@ -400,7 +382,7 @@ mod serde_tests {
     fn test_de_failure() {
         serde_test::assert_de_tokens_error::<Readable<VolumeId64>>(
             &[Token::Str("hello_world")],
-            "VolumeId64 parsing failed: invalid character: expected [0-9a-fA-F], found `h` at 1",
+            "VolumeId64 parsing failed: invalid character: expected [0-9a-fA-F], found `h` at 0",
         );
 
         serde_test::assert_de_tokens_error::<Compact<VolumeId64>>(

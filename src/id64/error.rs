@@ -1,5 +1,3 @@
-use crate::std::{error, fmt, str::from_utf8};
-
 /// A general error that can occur when working with VolumeId64s.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Error(pub(crate) ErrorKind);
@@ -9,7 +7,11 @@ pub(crate) enum ErrorKind {
     /// Invalid character in the [`VolumeId64`] string.
     ///
     /// [`VolumeId64`]: ../struct.VolumeId64.html
-    ParseChar { character: char, index: usize },
+    ParseChar {
+        character: char,
+        /// 0 based index
+        index: usize,
+    },
     /// A simple [`VolumeId64`] didn't contain 16 characters.
     ///
     /// [`VolumeId64`]: ../struct.VolumeId64.html
@@ -34,25 +36,15 @@ impl<'a> InvalidVolumeId64<'a> {
     /// Converts the lightweight error type into detailed diagnostics.
     pub fn into_err(self) -> Error {
         // Check whether or not the input was ever actually a valid UTF8 string
-        let input_str = match from_utf8(self.0) {
+        let input_str = match crate::std::str::from_utf8(self.0) {
             Ok(s) => s,
             Err(_) => return Error(ErrorKind::ParseInvalidUTF8),
         };
 
         for (index, character) in input_str.char_indices() {
-            let byte = character as u8;
-            if !character.is_ascii() {
-                // Multibyte char
-                return Error(ErrorKind::ParseChar {
-                    character,
-                    index: index + 1,
-                });
-            } else if !byte.is_ascii_hexdigit() {
+            if !character.is_ascii_hexdigit() {
                 // Non-hex char
-                return Error(ErrorKind::ParseChar {
-                    character: byte as char,
-                    index: index + 1,
-                });
+                return Error(ErrorKind::ParseChar { character, index });
             }
         }
 
@@ -65,8 +57,8 @@ impl<'a> InvalidVolumeId64<'a> {
     }
 }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl crate::std::fmt::Display for Error {
+    fn fmt(&self, f: &mut crate::std::fmt::Formatter) -> crate::std::fmt::Result {
         match self.0 {
             ErrorKind::ParseChar {
                 character, index, ..
@@ -92,4 +84,4 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+impl crate::std::error::Error for Error {}

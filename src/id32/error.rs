@@ -9,7 +9,11 @@ pub(crate) enum ErrorKind {
     /// Invalid character in the [`VolumeId32`] string.
     ///
     /// [`VolumeId32`]: ../struct.VolumeId32.html
-    ParseChar { character: char, index: usize },
+    ParseChar {
+        character: char,
+        /// 0 based index
+        index: usize,
+    },
     /// A simple [`VolumeId32`] didn't contain 8 characters.
     ///
     /// [`VolumeId32`]: ../struct.VolumeId32.html
@@ -26,6 +30,7 @@ pub(crate) enum ErrorKind {
     ParseGroupLength {
         group: usize,
         len: usize,
+        /// 0 based index
         index: usize,
     },
     /// The input was not a valid UTF8 string
@@ -40,7 +45,14 @@ pub(crate) enum ErrorKind {
 ///
 /// [`VolumeId32`]: ../struct.VolumeId32.html
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub struct InvalidVolumeId32<'a>(pub(crate) &'a [u8]);
+pub struct InvalidVolumeId32<'a>(pub(crate) &'a [u8], pub(crate) RequestedVolumeId);
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub(crate) enum RequestedVolumeId {
+    Any,
+    Simple,
+    Hyphenated,
+}
 
 impl<'a> InvalidVolumeId32<'a> {
     /// Converts the lightweight error type into detailed diagnostics.
@@ -51,33 +63,36 @@ impl<'a> InvalidVolumeId32<'a> {
             Err(_) => return Error(ErrorKind::ParseInvalidUTF8),
         };
 
+        let mut format = self.1;
         let mut hyphen_count = 0;
-        let mut group_bounds = 0;
+        let mut group_bound = 0;
 
         for (index, character) in input_str.char_indices() {
-            let byte = character as u8;
-            if !character.is_ascii() {
-                // Multibyte char
-                return Error(ErrorKind::ParseChar {
-                    character,
-                    index: index + 1,
-                });
-            } else if byte == b'-' {
-                // While we search, also count group breaks
-                if hyphen_count < 1 {
-                    group_bounds = index;
+            match (format, character.to_ascii_lowercase()) {
+                (_, '0'..='9' | 'a'..='f') => (),
+                (RequestedVolumeId::Simple, '-') => {
+                    return Error(ErrorKind::ParseChar {
+                        character: '-',
+                        index,
+                    });
                 }
-                hyphen_count += 1;
-            } else if !byte.is_ascii_hexdigit() {
-                // Non-hex char
-                return Error(ErrorKind::ParseChar {
-                    character: byte as char,
-                    index: index + 1,
-                });
+                (_, '-') => {
+                    if format == RequestedVolumeId::Any {
+                        format = RequestedVolumeId::Hyphenated;
+                    }
+
+                    if hyphen_count < 1 {
+                        group_bound = index;
+                    }
+                    hyphen_count += 1;
+                }
+                _ => {
+                    return Error(ErrorKind::ParseChar { character, index });
+                }
             }
         }
 
-        if hyphen_count == 0 {
+        if format == RequestedVolumeId::Any || format == RequestedVolumeId::Simple {
             // This means that we tried and failed to parse a simpleid32.
             // Since we verified that all the characters are valid, this means
             // that it MUST have an invalid length.
@@ -91,22 +106,19 @@ impl<'a> InvalidVolumeId32<'a> {
                 count: hyphen_count + 1,
             })
         } else {
-            // There are 2 groups, one of them has an incorrect length
-            const BLOCK_STARTS: [usize; 2] = [0, 5];
-            if group_bounds != BLOCK_STARTS[1] - 1 {
+            if group_bound != 4 {
                 return Error(ErrorKind::ParseGroupLength {
                     group: 0,
-                    len: group_bounds,
-                    index: BLOCK_STARTS[0] + 1,
+                    len: group_bound,
+                    index: 0,
                 });
             }
 
-            // The last group must be too short/long
-            Error(ErrorKind::ParseGroupLength {
+            return Error(ErrorKind::ParseGroupLength {
                 group: 1,
-                len: input_str.len() - BLOCK_STARTS[1],
-                index: BLOCK_STARTS[1] + 1,
-            })
+                len: input_str.len() - 5,
+                index: 5,
+            });
         }
     }
 }
@@ -136,7 +148,9 @@ impl fmt::Display for Error {
             ErrorKind::ParseGroupCount { count } => {
                 write!(f, "invalid group count: expected 2, found {}", count)
             }
-            ErrorKind::ParseGroupLength { group, len, .. } => {
+            ErrorKind::ParseGroupLength { group, len, index } => {
+                writeln!(f, "{}", index)?;
+
                 let expected = [4, 4][group];
                 write!(
                     f,
