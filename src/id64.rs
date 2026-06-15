@@ -449,3 +449,34 @@ impl Default for VolumeId64 {
         Self::nil()
     }
 }
+
+/// Parse [`VolumeId64`]s from string literals at compile time.
+///
+/// ## Usage
+///
+/// This macro transforms the string literal representation of a
+/// [`VolumeId64`] into the bytes representation, raising a compilation
+/// error if it cannot properly be parsed.
+///
+/// Defining a local variable:
+///
+/// ```
+/// # use fat_volume_id::volumeid64;
+/// let id = volumeid64!("a1a2a3a4a5a6a7a8");
+/// ```
+/// Using a const variable:
+/// ```
+/// # use fat_volume_id::volumeid64;
+/// const STR: &str = "a1a2a3a4a5a6a7a8";
+/// let id = volumeid64!(STR);
+/// ```
+#[macro_export]
+macro_rules! volumeid64 {
+    ($uuid:expr) => {{
+        const OUTPUT: $crate::id64::VolumeId64 = match $crate::id64::VolumeId64::try_parse($uuid) {
+            Ok(u) => u,
+            Err(_) => panic!("invalid VolumeId64"),
+        };
+        OUTPUT
+    }};
+}

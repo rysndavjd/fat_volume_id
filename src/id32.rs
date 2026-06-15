@@ -447,3 +447,34 @@ impl Default for VolumeId32 {
         Self::nil()
     }
 }
+
+/// Parse [`VolumeId32`]s from string literals at compile time.
+///
+/// ## Usage
+///
+/// This macro transforms the string literal representation of a
+/// [`VolumeId32`] into the bytes representation, raising a compilation
+/// error if it cannot properly be parsed.
+///
+/// Defining a local variable:
+///
+/// ```
+/// # use fat_volume_id::volumeid32;
+/// let id = volumeid32!("F9168C5E");
+/// ```
+/// Using a const variable:
+/// ```
+/// # use fat_volume_id::volumeid32;
+/// const STR: &str = "1234-5678";
+/// let id = volumeid32!(STR);
+/// ```
+#[macro_export]
+macro_rules! volumeid32 {
+    ($uuid:expr) => {{
+        const OUTPUT: $crate::id32::VolumeId32 = match $crate::id32::VolumeId32::try_parse($uuid) {
+            Ok(u) => u,
+            Err(_) => panic!("invalid VolumeId32"),
+        };
+        OUTPUT
+    }};
+}
