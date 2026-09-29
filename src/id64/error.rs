@@ -51,9 +51,9 @@ impl<'a> InvalidVolumeId64<'a> {
         // This means that we tried and failed to parse a simpleid64.
         // Since we verified that all the characters are valid, this means
         // that it MUST have an invalid length.
-        return Error(ErrorKind::ParseSimpleLength {
+        Error(ErrorKind::ParseSimpleLength {
             len: input_str.len(),
-        });
+        })
     }
 }
 

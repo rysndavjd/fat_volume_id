@@ -23,13 +23,13 @@ use crate::alloc::string::{String, ToString};
 
 impl fmt::Debug for VolumeId64 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        return fmt::LowerHex::fmt(&self, f);
+        fmt::LowerHex::fmt(&self, f)
     }
 }
 
 impl fmt::Display for VolumeId64 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        return fmt::LowerHex::fmt(&self, f);
+        fmt::LowerHex::fmt(&self, f)
     }
 }
 
@@ -45,7 +45,7 @@ impl fmt::LowerHex for VolumeId64 {
         for byte in &self.0 {
             write!(f, "{:02x}", byte)?;
         }
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -54,7 +54,7 @@ impl fmt::UpperHex for VolumeId64 {
         for byte in &self.0 {
             write!(f, "{:02X}", byte)?;
         }
-        return Ok(());
+        Ok(())
     }
 }
 

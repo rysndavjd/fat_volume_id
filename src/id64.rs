@@ -61,7 +61,7 @@ impl VolumeId64 {
     /// );
     /// ```
     pub const fn nil() -> Self {
-        return VolumeId64([0u8; 8]);
+        VolumeId64([0u8; 8])
     }
 
     /// A VolumeId64 with all ones.
@@ -77,7 +77,7 @@ impl VolumeId64 {
     /// );
     /// ```
     pub const fn max() -> Self {
-        return VolumeId64([0xffu8; 8]);
+        VolumeId64([0xffu8; 8])
     }
 
     /// Creates a VolumeId64 using supplied bytes.
@@ -97,7 +97,7 @@ impl VolumeId64 {
     /// ```
     #[inline]
     pub const fn from_bytes(bytes: [u8; 8]) -> VolumeId64 {
-        return VolumeId64(bytes);
+        VolumeId64(bytes)
     }
 
     /// Creates a VolumeId64 using supplied bytes in big-endian.
@@ -117,7 +117,7 @@ impl VolumeId64 {
     /// ```
     #[inline]
     pub const fn from_bytes_be(b: [u8; 8]) -> VolumeId64 {
-        return VolumeId64([b[7], b[6], b[5], b[4], b[3], b[2], b[1], b[0]]);
+        VolumeId64([b[7], b[6], b[5], b[4], b[3], b[2], b[1], b[0]])
     }
 
     /// Creates a VolumeId64 using the supplied bytes.
@@ -152,7 +152,7 @@ impl VolumeId64 {
         let mut bytes = [0u8; 8];
         bytes.copy_from_slice(b);
 
-        return Ok(VolumeId64::from_bytes(bytes));
+        Ok(VolumeId64::from_bytes(bytes))
     }
 
     /// Creates a VolumeId64 using the supplied bytes in big-endian.
@@ -187,7 +187,7 @@ impl VolumeId64 {
         let mut bytes = [0u8; 8];
         bytes.copy_from_slice(b);
 
-        return Ok(VolumeId64::from_bytes_be(bytes));
+        Ok(VolumeId64::from_bytes_be(bytes))
     }
 
     /// Creates a VolumeId64 from a 64bit value.

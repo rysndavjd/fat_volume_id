@@ -61,7 +61,7 @@ impl VolumeId32 {
     /// );
     /// ```
     pub const fn nil() -> Self {
-        return VolumeId32([0u8; 4]);
+        VolumeId32([0u8; 4])
     }
 
     /// A VolumeId32 with all ones.
@@ -77,7 +77,7 @@ impl VolumeId32 {
     /// );
     /// ```
     pub const fn max() -> Self {
-        return VolumeId32([0xffu8; 4]);
+        VolumeId32([0xffu8; 4])
     }
 
     /// Creates a VolumeId32 using supplied bytes.
@@ -97,7 +97,7 @@ impl VolumeId32 {
     /// ```
     #[inline]
     pub const fn from_bytes(bytes: [u8; 4]) -> VolumeId32 {
-        return VolumeId32(bytes);
+        VolumeId32(bytes)
     }
 
     /// Creates a VolumeId32 using supplied bytes in big-endian.
@@ -117,7 +117,7 @@ impl VolumeId32 {
     /// ```
     #[inline]
     pub const fn from_bytes_be(b: [u8; 4]) -> VolumeId32 {
-        return VolumeId32([b[3], b[2], b[1], b[0]]);
+        VolumeId32([b[3], b[2], b[1], b[0]])
     }
 
     /// Creates a VolumeId32 using the supplied bytes.
@@ -152,7 +152,7 @@ impl VolumeId32 {
         let mut bytes = [0u8; 4];
         bytes.copy_from_slice(b);
 
-        return Ok(VolumeId32::from_bytes(bytes));
+        Ok(VolumeId32::from_bytes(bytes))
     }
 
     /// Creates a VolumeId32 using the supplied bytes in big-endian.
@@ -187,7 +187,7 @@ impl VolumeId32 {
         let mut bytes = [0u8; 4];
         bytes.copy_from_slice(b);
 
-        return Ok(VolumeId32::from_bytes_be(bytes));
+        Ok(VolumeId32::from_bytes_be(bytes))
     }
 
     /// Creates a VolumeId32 from a 32bit value.

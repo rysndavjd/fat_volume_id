@@ -68,8 +68,8 @@ impl<'a> InvalidVolumeId32<'a> {
         let mut group_bound = 0;
 
         for (index, character) in input_str.char_indices() {
-            match (format, character.to_ascii_lowercase()) {
-                (_, '0'..='9' | 'a'..='f') => (),
+            match (format, character) {
+                (_, character) if character.is_ascii_hexdigit() => (),
                 (RequestedVolumeId::Simple, '-') => {
                     return Error(ErrorKind::ParseChar {
                         character: '-',
@@ -114,11 +114,11 @@ impl<'a> InvalidVolumeId32<'a> {
                 });
             }
 
-            return Error(ErrorKind::ParseGroupLength {
+            Error(ErrorKind::ParseGroupLength {
                 group: 1,
                 len: input_str.len() - 5,
                 index: 5,
-            });
+            })
         }
     }
 }

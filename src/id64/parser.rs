@@ -140,7 +140,7 @@ pub(crate) const fn parse_simpleid64(s: &'_ [u8]) -> Result<[u8; 8], InvalidVolu
         i += 1;
     }
 
-    return Ok(buf);
+    Ok(buf)
 }
 
 #[cfg(test)]

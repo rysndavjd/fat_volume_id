@@ -144,7 +144,7 @@ pub(crate) const fn parse_simpleid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolu
         i += 1;
     }
 
-    return Ok(buf);
+    Ok(buf)
 }
 
 #[inline]
