@@ -13,7 +13,7 @@
 //! Adapters for alternative string formats.
 
 use crate::{
-    common::{LOWER, UPPER},
+    common::nibble_to_hex,
     id32::{Error, VolumeId32},
     std::{borrow::Borrow, fmt, mem::transmute, str::FromStr},
 };
@@ -117,14 +117,17 @@ impl VolumeId32 {
 }
 
 #[inline]
-const fn format_simpleid32(src: &[u8; 4], upper: bool) -> [u8; SimpleId32::LENGTH] {
-    let lut = if upper { &UPPER } else { &LOWER };
+const fn format_simpleid32(
+    src: &[u8; SimpleId32::BYTE_LENGTH],
+    upper: bool,
+) -> [u8; SimpleId32::LENGTH] {
+    let alpha_offset = if upper { 0x07 } else { 0x27 };
     let mut dst = [0; SimpleId32::LENGTH];
     let mut i = 0;
-    while i < (SimpleId32::LENGTH / 2) {
+    while i < SimpleId32::BYTE_LENGTH {
         let x = src[i];
-        dst[i * 2] = lut[(x >> 4) as usize];
-        dst[i * 2 + 1] = lut[(x & 0x0f) as usize];
+        dst[i * 2] = nibble_to_hex(x >> 4, alpha_offset);
+        dst[i * 2 + 1] = nibble_to_hex(x & 0x0f, alpha_offset);
         i += 1;
     }
     dst
@@ -132,27 +135,18 @@ const fn format_simpleid32(src: &[u8; 4], upper: bool) -> [u8; SimpleId32::LENGT
 
 #[inline]
 const fn format_hyphenatedid32(src: &[u8; 4], upper: bool) -> [u8; HyphenatedId32::LENGTH] {
-    let lut = if upper { &UPPER } else { &LOWER };
-    let groups = [(0, 4), (5, 8)];
+    let simple = format_simpleid32(src, upper);
     let mut dst = [0; HyphenatedId32::LENGTH];
 
-    let mut group_idx = 0;
     let mut i = 0;
-    while group_idx < 2 {
-        let (start, end) = groups[group_idx];
-        let mut j = start;
-        while j < end {
-            let x = src[i];
-            i += 1;
-
-            dst[j] = lut[(x >> 4) as usize];
-            dst[j + 1] = lut[(x & 0x0f) as usize];
-            j += 2;
-        }
-        if group_idx < 1 {
-            dst[end] = b'-';
-        }
-        group_idx += 1;
+    while i < 4 {
+        dst[i] = simple[i];
+        i += 1;
+    }
+    dst[4] = b'-';
+    while i < 8 {
+        dst[i + 1] = simple[i];
+        i += 1;
     }
     dst
 }
@@ -162,6 +156,11 @@ impl SimpleId32 {
     ///
     /// [`VolumeId32`]: ../struct.VolumeId32.html
     pub const LENGTH: usize = 8;
+
+    /// The byte length of a simple [`VolumeId32`] string.
+    ///
+    /// [`VolumeId32`]: ../struct.VolumeId32.html
+    pub const BYTE_LENGTH: usize = 4;
 
     /// Creates a [`SimpleId32`] from a [`VolumeId32`].
     ///     
@@ -187,7 +186,7 @@ impl SimpleId32 {
     ///
     /// [`LENGTH`]: #associatedconstant.LENGTH
     #[inline]
-    pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
+    pub const fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
         Self::_encode(self.0.as_bytes(), buffer, false)
     }
 
@@ -203,18 +202,16 @@ impl SimpleId32 {
     ///
     /// [`LENGTH`]: #associatedconstant.LENGTH
     #[inline]
-    pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
+    pub const fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
         Self::_encode(self.0.as_bytes(), buffer, true)
     }
 
     #[inline]
-    fn _encode<'b>(src: &[u8; 4], buffer: &'b mut [u8], upper: bool) -> &'b mut str {
-        assert!(
-            buffer.len() >= Self::LENGTH,
-            "Buffer too small to encode a SimpleId32"
-        );
-
-        let buf: &mut [u8; Self::LENGTH] = (&mut buffer[..Self::LENGTH]).try_into().unwrap();
+    const fn _encode<'b>(src: &[u8; 4], buffer: &'b mut [u8], upper: bool) -> &'b mut str {
+        let buf = match buffer.first_chunk_mut::<{ Self::LENGTH }>() {
+            Some(b) => b,
+            None => panic!("Buffer too small to encode a SimpleId32"),
+        };
         *buf = format_simpleid32(src, upper);
 
         // SAFETY: The encoded buffer is ASCII encoded
@@ -281,7 +278,7 @@ impl HyphenatedId32 {
     ///
     /// [`LENGTH`]: #associatedconstant.LENGTH
     #[inline]
-    pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
+    pub const fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
         Self::_encode(self.0.as_bytes(), buffer, false)
     }
 
@@ -302,18 +299,16 @@ impl HyphenatedId32 {
     ///
     /// [`LENGTH`]: #associatedconstant.LENGTH
     #[inline]
-    pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
+    pub const fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
         Self::_encode(self.0.as_bytes(), buffer, true)
     }
 
     #[inline]
-    fn _encode<'b>(src: &[u8; 4], buffer: &'b mut [u8], upper: bool) -> &'b mut str {
-        assert!(
-            buffer.len() >= Self::LENGTH,
-            "Buffer too small to encode a HyphenatedId32"
-        );
-
-        let buf: &mut [u8; Self::LENGTH] = (&mut buffer[..Self::LENGTH]).try_into().unwrap();
+    const fn _encode<'b>(src: &[u8; 4], buffer: &'b mut [u8], upper: bool) -> &'b mut str {
+        let buf = match buffer.first_chunk_mut::<{ Self::LENGTH }>() {
+            Some(b) => b,
+            None => panic!("Buffer too small to encode a HyphenatedId32"),
+        };
         *buf = format_hyphenatedid32(src, upper);
 
         // SAFETY: The encoded buffer is ASCII encoded

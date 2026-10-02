@@ -11,7 +11,6 @@
 // except according to those terms.
 
 use crate::{
-    common::{HEX_TABLE, SHL4_TABLE},
     id32::{
         VolumeId32,
         error::{Error, InvalidVolumeId32, RequestedVolumeId},
@@ -19,6 +18,48 @@ use crate::{
     },
     std::str::FromStr,
 };
+
+#[inline]
+const fn decode_hex8(hex: &[u8; 8]) -> Option<[u8; 4]> {
+    let mut nibbles = [0u8; 8];
+    let mut bad = 0u8;
+
+    let mut i = 0;
+    while i < 8 {
+        let c = hex[i];
+
+        // '0'..='9' map to 0..=9; 'a'..='f' and 'A'..='F' (via `| 0x20`) map to
+        // 0..=5, offset by 10 to land in 10..=15.
+        let digit = c.wrapping_sub(b'0');
+        let alpha = (c | 0x20).wrapping_sub(b'a');
+
+        let is_digit = digit < 10;
+        let is_alpha = alpha < 6;
+
+        nibbles[i] = if is_digit {
+            digit
+        } else {
+            alpha.wrapping_add(10)
+        };
+
+        bad |= if is_digit | is_alpha { 0 } else { 1 };
+
+        i += 1;
+    }
+
+    if bad != 0 {
+        return None;
+    }
+
+    let mut buf = [0u8; 4];
+    let mut j = 0;
+    while j < 4 {
+        buf[j] = (nibbles[j * 2] << 4) | nibbles[j * 2 + 1];
+        j += 1;
+    }
+
+    Some(buf)
+}
 
 impl FromStr for VolumeId32 {
     type Err = Error;
@@ -118,33 +159,16 @@ impl VolumeId32 {
 
 #[inline]
 pub(crate) const fn parse_simpleid32(s: &'_ [u8]) -> Result<[u8; 4], InvalidVolumeId32<'_>> {
-    if s.len() != SimpleId32::LENGTH {
+    let hex = if s.len() == SimpleId32::LENGTH {
+        s.first_chunk::<{ SimpleId32::LENGTH }>().unwrap()
+    } else {
         return Err(InvalidVolumeId32(s, RequestedVolumeId::Simple));
+    };
+
+    match decode_hex8(hex) {
+        Some(buf) => Ok(buf),
+        None => Err(InvalidVolumeId32(s, RequestedVolumeId::Simple)),
     }
-
-    let mut buf = [0u8; 4];
-
-    let mut i = 0;
-
-    while i < 4 {
-        // Convert a two-char hex value (like `A8`)
-        // into a byte (like `10101000`)
-        let h1 = HEX_TABLE[s[i * 2] as usize];
-        let h2 = HEX_TABLE[s[i * 2 + 1] as usize];
-
-        // We use `0xff` as a sentinel value to indicate
-        // an invalid hex character sequence (like the letter `G`)
-        if (h1 | h2) == 0xff {
-            return Err(InvalidVolumeId32(s, RequestedVolumeId::Simple));
-        }
-
-        // The upper nibble needs to be shifted into position
-        // to produce the final byte value
-        buf[i] = SHL4_TABLE[h1 as usize] | h2;
-        i += 1;
-    }
-
-    Ok(buf)
 }
 
 #[inline]
@@ -168,31 +192,23 @@ pub(crate) const fn parse_hyphenatedid32(s: &'_ [u8]) -> Result<[u8; 4], Invalid
         _ => return Err(InvalidVolumeId32(s, RequestedVolumeId::Hyphenated)),
     }
 
-    let positions: [u8; 2] = [0, 5];
-
-    let mut buf: [u8; 4] = [0; 4];
-    let mut j = 0;
-
-    while j < 2 {
-        let i = positions[j];
-
-        // The decoding here is the same as the simple case
-        // We're just dealing with two values instead of one
-        let h1 = HEX_TABLE[s[i as usize] as usize];
-        let h2 = HEX_TABLE[s[(i + 1) as usize] as usize];
-        let h3 = HEX_TABLE[s[(i + 2) as usize] as usize];
-        let h4 = HEX_TABLE[s[(i + 3) as usize] as usize];
-
-        if (h1 | h2 | h3 | h4) == 0xff {
-            return Err(InvalidVolumeId32(s, RequestedVolumeId::Hyphenated));
-        }
-
-        buf[j * 2] = SHL4_TABLE[h1 as usize] | h2;
-        buf[j * 2 + 1] = SHL4_TABLE[h3 as usize] | h4;
-        j += 1;
+    // Gather the hex characters, skipping the hyphen, so they're
+    // contiguous for the decoder.
+    let mut hex = [0u8; 8];
+    let mut i = 0;
+    while i < 4 {
+        hex[i] = s[i];
+        i += 1;
+    }
+    while i < 8 {
+        hex[i] = s[i + 1];
+        i += 1;
     }
 
-    Ok(buf)
+    match decode_hex8(&hex) {
+        Some(buf) => Ok(buf),
+        None => Err(InvalidVolumeId32(s, RequestedVolumeId::Hyphenated)),
+    }
 }
 
 #[cfg(test)]

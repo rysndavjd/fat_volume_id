@@ -11,7 +11,6 @@
 // except according to those terms.
 
 use crate::{
-    common::{HEX_TABLE, SHL4_TABLE},
     id64::{
         VolumeId64,
         error::{Error, InvalidVolumeId64},
@@ -114,30 +113,47 @@ impl VolumeId64 {
 
 #[inline]
 pub(crate) const fn parse_simpleid64(s: &'_ [u8]) -> Result<[u8; 8], InvalidVolumeId64<'_>> {
-    if s.len() != SimpleId64::LENGTH {
+    let hex = if s.len() == SimpleId64::LENGTH {
+        s.first_chunk::<{ SimpleId64::LENGTH }>().unwrap()
+    } else {
+        return Err(InvalidVolumeId64(s));
+    };
+
+    let mut nibbles = [0u8; 16];
+    let mut bad = 0u8;
+
+    let mut i = 0;
+    while i < 16 {
+        let c = hex[i];
+
+        // '0'..='9' map to 0..=9; 'a'..='f' and 'A'..='F' (via `| 0x20`) map to
+        // 0..=5, offset by 10 to land in 10..=15.
+        let digit = c.wrapping_sub(b'0');
+        let alpha = (c | 0x20).wrapping_sub(b'a');
+
+        let is_digit = digit < 10;
+        let is_alpha = alpha < 6;
+
+        nibbles[i] = if is_digit {
+            digit
+        } else {
+            alpha.wrapping_add(10)
+        };
+
+        bad |= if is_digit | is_alpha { 0 } else { 1 };
+
+        i += 1;
+    }
+
+    if bad != 0 {
         return Err(InvalidVolumeId64(s));
     }
 
     let mut buf = [0u8; 8];
-
-    let mut i = 0;
-
-    while i < 8 {
-        // Convert a two-char hex value (like `A8`)
-        // into a byte (like `10101000`)
-        let h1 = HEX_TABLE[s[i * 2] as usize];
-        let h2 = HEX_TABLE[s[i * 2 + 1] as usize];
-
-        // We use `0xff` as a sentinel value to indicate
-        // an invalid hex character sequence (like the letter `G`)
-        if h1 | h2 == 0xff {
-            return Err(InvalidVolumeId64(s));
-        }
-
-        // The upper nibble needs to be shifted into position
-        // to produce the final byte value
-        buf[i] = SHL4_TABLE[h1 as usize] | h2;
-        i += 1;
+    let mut j = 0;
+    while j < 8 {
+        buf[j] = (nibbles[j * 2] << 4) | nibbles[j * 2 + 1];
+        j += 1;
     }
 
     Ok(buf)

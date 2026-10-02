@@ -144,7 +144,7 @@ impl VolumeId32 {
     ///     volumeid32.to_string(),
     /// );
     /// ```
-    pub fn from_slice(b: &[u8]) -> Result<Self, Error> {
+    pub const fn from_slice(b: &[u8]) -> Result<Self, Error> {
         if b.len() != 4 {
             return Err(Error(ErrorKind::ParseByteLength { len: b.len() }));
         }
@@ -179,7 +179,7 @@ impl VolumeId32 {
     ///     volumeid32.to_string(),
     /// );
     /// ```
-    pub fn from_slice_be(b: &[u8]) -> Result<Self, Error> {
+    pub const fn from_slice_be(b: &[u8]) -> Result<Self, Error> {
         if b.len() != 4 {
             return Err(Error(ErrorKind::ParseByteLength { len: b.len() }));
         }
@@ -207,7 +207,7 @@ impl VolumeId32 {
     ///     volumeid32.hyphenated().to_string(),
     /// );
     /// ```
-    pub fn from_u32(v: u32) -> Self {
+    pub const fn from_u32(v: u32) -> Self {
         VolumeId32::from_bytes(v.to_le_bytes())
     }
 
@@ -232,7 +232,7 @@ impl VolumeId32 {
     ///     volumeid32.hyphenated().to_string(),
     /// );
     /// ```
-    pub fn from_u32_be(v: u32) -> Self {
+    pub const fn from_u32_be(v: u32) -> Self {
         VolumeId32::from_bytes(v.to_be_bytes())
     }
 
@@ -297,7 +297,7 @@ impl VolumeId32 {
     ///     volumeid32.hyphenated().to_string(),
     /// );
     /// ```
-    pub fn from_u16_pair(hi: u16, lo: u16) -> Self {
+    pub const fn from_u16_pair(hi: u16, lo: u16) -> Self {
         VolumeId32::from_u32(((hi as u32) << 16) | lo as u32)
     }
 
@@ -319,7 +319,7 @@ impl VolumeId32 {
     ///     volumeid32.hyphenated().to_string(),
     /// );
     /// ```
-    pub fn from_u16_pair_be(hi: u16, lo: u16) -> Self {
+    pub const fn from_u16_pair_be(hi: u16, lo: u16) -> Self {
         VolumeId32::from_u32_be(((hi as u32) << 16) | lo as u32)
     }
 

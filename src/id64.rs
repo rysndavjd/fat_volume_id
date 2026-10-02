@@ -144,7 +144,7 @@ impl VolumeId64 {
     ///     volumeid64.to_string(),
     /// );
     /// ```
-    pub fn from_slice(b: &[u8]) -> Result<Self, Error> {
+    pub const fn from_slice(b: &[u8]) -> Result<Self, Error> {
         if b.len() != 8 {
             return Err(Error(ErrorKind::ParseByteLength { len: b.len() }));
         }
@@ -179,7 +179,7 @@ impl VolumeId64 {
     ///     volumeid64.to_string(),
     /// );
     /// ```
-    pub fn from_slice_be(b: &[u8]) -> Result<Self, Error> {
+    pub const fn from_slice_be(b: &[u8]) -> Result<Self, Error> {
         if b.len() != 8 {
             return Err(Error(ErrorKind::ParseByteLength { len: b.len() }));
         }
@@ -207,7 +207,7 @@ impl VolumeId64 {
     ///     volumeid64.simple().to_string(),
     /// );
     /// ```
-    pub fn from_u64(v: u64) -> Self {
+    pub const fn from_u64(v: u64) -> Self {
         VolumeId64::from_bytes(v.to_le_bytes())
     }
 
@@ -232,7 +232,7 @@ impl VolumeId64 {
     ///     volumeid64.simple().to_string(),
     /// );
     /// ```
-    pub fn from_u64_be(v: u64) -> Self {
+    pub const fn from_u64_be(v: u64) -> Self {
         VolumeId64::from_bytes(v.to_be_bytes())
     }
 
@@ -297,7 +297,7 @@ impl VolumeId64 {
     ///     volumeid64.simple().to_string(),
     /// );
     /// ```
-    pub fn from_u32_pair(high_bits: u32, low_bits: u32) -> Self {
+    pub const fn from_u32_pair(high_bits: u32, low_bits: u32) -> Self {
         VolumeId64::from_u64(((high_bits as u64) << 32) | low_bits as u64)
     }
 
@@ -319,7 +319,7 @@ impl VolumeId64 {
     ///     volumeid64.simple().to_string(),
     /// );
     /// ```
-    pub fn from_u32_pair_be(high_bits: u32, low_bits: u32) -> Self {
+    pub const fn from_u32_pair_be(high_bits: u32, low_bits: u32) -> Self {
         VolumeId64::from_u64_be(((high_bits as u64) << 32) | low_bits as u64)
     }
 

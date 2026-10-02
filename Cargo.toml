@@ -10,21 +10,21 @@ description = "A library to generate and parse Volume Identifiers in FAT12/16/32
 license = "Apache-2.0 OR MIT"
 
 [dependencies]
-borsh = { version = "1.6.1", default-features = false, optional = true }
-borsh-derive = { version = "1.6.1", default-features = false, optional = true }
+borsh = { version = "1.8.1", default-features = false, optional = true }
+borsh-derive = { version = "1.8.1", default-features = false, optional = true }
 serde_core = { version = "1.0.228", default-features = false, optional = true }
-zerocopy = { version = "0.8.52", default-features = false, features = [
+zerocopy = { version = "0.8.59", default-features = false, features = [
     "derive",
 ], optional = true }
 
 [dev-dependencies]
 serde = { version = "1.0.228" }
 serde_derive = { version = "1.0.228" }
-serde_json = { version = "1.0.150" }
+serde_json = { version = "1.0.151" }
 serde_test = { version = "1.0.177" }
 
 [features]
-default = ["id32", "id64", "std", "alloc"]
+default = ["id32", "id64", "std", "alloc", "serde"]
 std = ["borsh/std", "zerocopy/std"]
 alloc = ["serde_core/alloc", "zerocopy/alloc"]
 zerocopy = ["dep:zerocopy"]
