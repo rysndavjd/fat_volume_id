@@ -1,11 +1,9 @@
-cargo-features = ["feature-metadata"]
-
 [package]
 authors = ["rysndavjd"]
 categories = ["data-structures", "no-std", "parser-implementations"]
 name = "fat_volume_id"
 readme = "README.md"
-version = "0.4.1"
+version = "0.4.0"
 edition = "2024"
 include = ["src", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "A library to generate and parse Volume Identifiers in FAT12/16/32, exFAT and NTFS."
@@ -15,7 +13,9 @@ license = "Apache-2.0 OR MIT"
 borsh = { version = "1.8.1", default-features = false, optional = true }
 borsh-derive = { version = "1.8.1", default-features = false, optional = true }
 serde_core = { version = "1.0.228", default-features = false, optional = true }
-zerocopy = { version = "0.8.59", default-features = false, features = ["derive"], optional = true }
+zerocopy = { version = "0.8.59", default-features = false, features = [
+    "derive",
+], optional = true }
 
 [dev-dependencies]
 serde = { version = "1.0.228" }
@@ -25,17 +25,10 @@ serde_test = { version = "1.0.177" }
 
 [features]
 default = ["id32", "id64", "std", "alloc", "serde"]
-# Enable use of std library.
-std = { enables = ["borsh/std", "zerocopy/std"], doc = "Enable use of std library." }
-# Enable features requiring allocation.
-alloc = { enables = ["serde_core/alloc", "zerocopy/alloc"], doc = "Enable features requiring allocation." }
-# Enable zerocopy traits on types.
-zerocopy = { enables = ["dep:zerocopy"], doc = "Enable zerocopy traits on types." }
-# Enable borsh traits on types.
-borsh = { enables = ["dep:borsh", "dep:borsh-derive"], doc = "Enable borsh traits on types." }
-# Enable serde traits on types.
-serde = { enables = ["dep:serde_core"], doc = "Enable serde traits on types." }
-# Enable VolumdId32 type.
-id32 = { enables = [], doc = "Enable VolumdId32 type." }
-# Enable VolumeId64 type.
-id64 = { enables = [], doc = "Enable VolumeId64 type." }
+std = ["borsh/std", "zerocopy/std"]
+alloc = ["serde_core/alloc", "zerocopy/alloc"]
+zerocopy = ["dep:zerocopy"]
+borsh = ["dep:borsh", "dep:borsh-derive"]
+serde = ["dep:serde_core"]
+id32 = []
+id64 = []
